@@ -1,0 +1,40 @@
+.border {
+  
+  background: 
+    linear-gradient(90deg, blue 50%, transparent 50%),
+    linear-gradient(0deg, blue 50%, transparent 50%),
+    linear-gradient(90deg, blue 50%, transparent 50%),
+    linear-gradient(0deg, blue 50%, transparent 50%);
+  background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+  background-size: 15px 4px, 4px 15px, 15px 4px, 4px 15px;
+  background-position: left top, right top, left bottom, left top;
+  padding: 4px;
+  animation: border-dance 4s infinite linear;
+}
+	
+@keyframes border-dance 
+{
+  0%
+  {
+    background-position: left top, right top, right bottom, left bottom;
+  }
+  100% 
+  {
+    background-position: right top, right bottom, left bottom, left top;
+  }
+}
+
+
+.centerize{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+}
+.reactivator-container{
+  width: 500px;
+  height: 500px;
+  position: relative;
+  background-color: #b5b9bf
+}
