@@ -1,6 +1,7 @@
 import React from 'react';
 import Cropper from './Cropper'
 import './App.css'
+import {handleSize} from './style'
 
 class App extends React.Component {
   constructor() {
@@ -10,6 +11,7 @@ class App extends React.Component {
 
     this.isDraggingOld=false;
     this.isDraggingNew=false;
+    this.isCroppingOld=false
 
     this.state={
         anchorX:null,
@@ -20,7 +22,9 @@ class App extends React.Component {
         left:null,
         diffMouseWithRect:{
             x:0,
-            y:0
+            y:0,
+            w:0,
+            h:0,
         },
         selectedBoxIndex:-1,
         boxes:[],
@@ -34,6 +38,15 @@ class App extends React.Component {
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mouseup', this.onMouseUp);
   }
+   isSubElement =(el, check)=> {
+        if (el === null) {
+            return false;
+        } else if (check(el)) {
+            return true;
+        } else {
+            return this.isSubElement(el.parentNode, check);
+        }
+    }
 
   getBoundingCustome=(el)=>{
     return this.container.getBoundingClientRect(el)
@@ -49,6 +62,15 @@ class App extends React.Component {
   }
   
   onMouseDown=(ev)=>{
+
+    if (
+        ev.target.dataset.wrapper 
+        || 
+        ev.target.dataset.dir 
+        || this.isSubElement(ev.target, (el) => el.dataset && el.dataset.wrapper)) {
+        return;
+    }
+    ev.preventDefault();
 
     if(ev.target.className.search('MAIN_CONTAINER')<0){//child selected 
 
@@ -77,9 +99,91 @@ class App extends React.Component {
                 top:null,
                 left:null,
             })
+  }
 
+  onCropingOld=(ev,bi,side)=>{
+
+    if(ev.buttons===1 && this.state.selectedBoxIndex===bi ){//with holding left click 
+        
+
+
+        if(this.state.diffMouseWithRect.w===0){
+            this.setState({//selectedBoxIndex:bi,
+                diffMouseWithRect:{
+                    ...this.state.diffMouseWithRect,
+                    w:this.state.boxes[bi].left,
+                    h:this.state.boxes[bi].top,
+                    y:this.getMousePosition(ev).y-this.state.boxes[bi].top,
+                    x:this.getMousePosition(ev).x-this.state.boxes[bi].left
+                }})
+
+            return;
+        }
+
+        const diffY=this.getMousePosition(ev).y-this.state.boxes[bi].top
+        const diffX=this.getMousePosition(ev).x-this.state.boxes[bi].left
+
+        if(side==='sw'){
+            this.state.boxes[bi].left=this.getMousePosition(ev).x-handleSize/2
+            this.state.boxes[bi].diffY=this.getMousePosition(ev).y-this.state.boxes[bi].top-handleSize/2
+            this.state.boxes[bi].diffX=Math.abs(this.state.boxes[bi].diffX)-diffX+handleSize/2
+            this.setState({boxes:this.state.boxes})
+            
+        }
+
+        if(side==='se'){
+            this.state.boxes[bi].diffX=-this.getMousePosition(ev).x+Math.abs(this.state.boxes[bi].left)+handleSize/2
+            this.state.boxes[bi].diffY=-this.getMousePosition(ev).y+Math.abs(this.state.boxes[bi].top )+handleSize/2
+            this.setState({boxes:this.state.boxes})
+        }
+
+        if(side==='nw'){
+            this.state.boxes[bi].top=this.getMousePosition(ev).y
+            this.state.boxes[bi].left=this.getMousePosition(ev).x-handleSize/2
+            this.state.boxes[bi].diffY= Math.abs(this.state.boxes[bi].diffY)-diffY
+            this.state.boxes[bi].diffX=Math.abs(this.state.boxes[bi].diffX)-diffX+handleSize/2
+            this.setState({boxes:this.state.boxes})
+        }
+
+        if(side==='ne'){
+            this.state.boxes[bi].top=this.getMousePosition(ev).y
+            this.state.boxes[bi].diffX=-this.getMousePosition(ev).x+Math.abs(this.state.boxes[bi].left)+handleSize/2
+            this.state.boxes[bi].diffY= Math.abs(this.state.boxes[bi].diffY)-diffY
+            this.setState({boxes:this.state.boxes})
+
+        }
+
+
+    }
 
   }
+  onMouseMoveOldBox=(ev,bi)=>{
+
+    if(ev.buttons===1 && this.state.selectedBoxIndex===bi && !this.isCroppingOld){//with holding left click 
+
+
+        const diffX=this.getMousePosition(ev).y-this.state.boxes[bi].top
+        const diffY=this.getMousePosition(ev).x-this.state.boxes[bi].left
+
+        if(this.state.diffMouseWithRect.x===0){
+            this.setState({//selectedBoxIndex:bi,
+                diffMouseWithRect:{
+                    ...this.state.diffMouseWithRect,
+                    x:this.getMousePosition(ev).y-this.state.boxes[bi].top,
+                    y:this.getMousePosition(ev).x-this.state.boxes[bi].left
+                }})
+
+            this.isDraggingOld=true
+            return;
+        }
+        this.state.boxes[bi].top=Math.abs(this.state.boxes[bi].top+diffX-this.state.diffMouseWithRect.x)
+        this.state.boxes[bi].left=Math.abs(this.state.boxes[bi].left+diffY-this.state.diffMouseWithRect.y)
+
+        this.setState(prv=>({boxes:prv.boxes}))
+    }
+
+  }
+
   onMouseMove=(ev)=>{
 
     ev.preventDefault()
@@ -125,7 +229,7 @@ class App extends React.Component {
   }
 
  
-  adaptor=(c)=>{
+adaptor=(c)=>{
 
     return {
         top:c.top?Math.abs(c.top)+'px':'0px',
@@ -134,84 +238,63 @@ class App extends React.Component {
         width:(!Number.isNaN(parseFloat(c.diffX))?  (Math.abs(c.diffX)+'px'):'0px')
     }
 
-  }
+}
 
-  render() {
+                render() {
 
-    const adaptored=this.adaptor(this.state)
-    return (
-      <div style={{display:'flex',flexDirection:'column',width:'100%',justifyContent:'center',alignItems:'center'}}>
-        <p>welcome reacivator!</p>
-        <input type='button' value='undo' onClick={()=>this.setState({boxes:this.state.boxes.splice(0,this.state.boxes.length-1)})}/>
-        <input type='button' value='reset' onClick={()=>this.setState({boxes:[]})}/>
-        <div 
-            ref={ref=>this.container=ref}
-            style={{backgroundColor:'gray',width:'500px',height:'500px'}}
-            onMouseDown={this.onMouseDown}
-            className={`MAIN_CONTAINER`}
-        >
-        {
-            this.state.boxes.map((b,bi)=><Cropper
-                        key={bi}
-                        zindex={bi}
-                        isDragging={this.state.diffMouseWithRect.x>0}
-                        //ref={ref=>this['cropper_'+bi]=ref}
-                        isSelected={this.state.selectedBoxIndex===bi}
-                        {...{...this.adaptor(b)}}
-                        onMouseMove={(ev)=>{
-                            if(ev.buttons===1 && this.state.selectedBoxIndex===bi){//with holding left click 
-
-
-                                const diffX=this.getMousePosition(ev).y-this.state.boxes[bi].top
-                                const diffY=this.getMousePosition(ev).x-this.state.boxes[bi].left
-
-                                if(this.state.diffMouseWithRect.x===0){
-                                    this.setState({
-                                        //selectedBoxIndex:bi,
-                                        diffMouseWithRect:{
-                                            x:this.getMousePosition(ev).y-this.state.boxes[bi].top,
-                                            y:this.getMousePosition(ev).x-this.state.boxes[bi].left
-                                        }})
-                                    return;
-                                }
-                                this.isDraggingOld=true
-                               
-            this.state.boxes[bi].top=Math.abs(this.state.boxes[bi].top+diffX-this.state.diffMouseWithRect.x)
-            this.state.boxes[bi].left=Math.abs(this.state.boxes[bi].left+diffY-this.state.diffMouseWithRect.y)
-            
-                                this.setState(prv=>({boxes:prv.boxes}))
-                            }
-                        }}
-                        onMouseUp={(ev)=>{
-                            this.isDraggingOld=false
-                            this.setState({diffMouseWithRect:{x:0,y:0}})
-                        }}
-                        onSelectBox={()=>{
-                            !this.isDraggingOld && this.setState({selectedBoxIndex:bi})
-                        }}
-                    />
-            )
-        }
-        {
-            this.isDraggingNew 
-            && 
-            <Cropper
-                {...{...adaptored}}
-            />
-        }
-        {
-            this.debugMode && (()=>{
-                //console.clear()
-                /* console.table({...{...adaptored},
-                    isDraggingNew:this.isDraggingNew,
-                    isDraggingOld:this.isDraggingOld,
-                })
-                console.table(this.state.boxes) */
-            })() 
-        }
-        </div>
-      </div>
-    )
-  }
+                    const adaptored=this.adaptor(this.state)
+                    return (
+                    <div style={{display:'flex',flexDirection:'column',width:'100%',justifyContent:'center',alignItems:'center'}}>
+                        <p>welcome reacivator!</p>
+                        <input type='button' value='undo' onClick={()=>this.setState({boxes:this.state.boxes.splice(0,this.state.boxes.length-1)})}/>
+                        <input type='button' value='reset' onClick={()=>this.setState({boxes:[]})}/>
+                        <div 
+                            ref={ref=>this.container=ref}
+                            style={{backgroundColor:'gray',width:'500px',height:'500px'}}
+                            onMouseDown={this.onMouseDown}
+                            className={`MAIN_CONTAINER`}
+                        >
+                        {
+                            this.state.boxes.map((b,bi)=><Cropper
+                                        key={bi}
+                                        zindex={bi}
+                                        isDragging={this.state.selectedBoxIndex===bi && this.isDraggingOld}
+                                        isCropping={this.state.selectedBoxIndex===bi && this.isCroppingOld}
+                                        isSelected={this.state.selectedBoxIndex===bi}
+                                        {...{...this.adaptor(b)}}
+                                        onMouseMove={(ev)=>{this.onMouseMoveOldBox(ev,bi)}}
+                                        onMouseUp={(ev)=>{
+                                            this.isDraggingOld=false
+                                            this.isCroppingOld=false;
+                                            this.setState({diffMouseWithRect:{x:0,y:0,h:0,w:0}})
+                                        }}
+                                        onCroping={(ev,side)=>{
+                                            this.isCroppingOld=true
+                                            this.onCropingOld(ev,bi,side)
+                                        }}
+                                        onSelectBox={()=>{
+                                            !this.isDraggingOld && this.setState({selectedBoxIndex:bi})
+                                        }}
+                                    />
+                            )
+                        }
+                        {
+                            this.isDraggingNew 
+                            && 
+                            <Cropper
+                                {...{...adaptored}}
+                            />
+                        }
+                        {
+                            this.debugMode && (()=>{
+                                console.clear()
+                                console.table(this.state.boxes) 
+                                //console.table(this.state.diffMouseWithRect) 
+                            })() 
+                        }
+                        </div>
+                    </div>
+                    )
+                }
 }
 export default App;
