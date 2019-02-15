@@ -24,6 +24,7 @@ class Container extends React.Component {
 			mainContainerFlexPercent:70,
 			containerStyle:{
 				zoomScale:1.0,
+				snapSize:10,
 				display: 'flex',
 				flexDirection: 'column',
 				width: '100%',
@@ -477,12 +478,33 @@ class Container extends React.Component {
 		)
 	}
 
+	snapGridify=(data)=>{
+		if(this.state.toggleSnapGrid){
+			let ss=this.state.containerStyle.snapSize
+			return ({
+				...data,
+				top:  parseInt((data.top)/ss)*ss,
+				left: parseInt((data.left)/ss)*ss,
+				diffX:parseInt((data.diffX)/ss)*ss,
+				diffY:parseInt((data.diffY)/ss)*ss,
+			})
+		}
+		return data;
+
+	}
+
 	showMainContainer=()=>{
 
 		return(
 			<div
 				ref={(ref) => (this.container = ref)}
-				style={{ transform:`scale(${this.state.containerStyle.zoomScale})`,position:'relative',backgroundColor: 'gray', width: '500px', height: '500px' }}
+				style={{ 
+					
+					...{...(this.state.toggleSnapGrid?{
+						backgroundSize:`${this.state.containerStyle.snapSize}px ${this.state.containerStyle.snapSize}px`,    
+    					backgroundImage:`repeating-linear-gradient(0deg, #fff, #fff 1px, transparent 1px, transparent ${this.state.containerStyle.snapSize}px),repeating-linear-gradient(-90deg, #fff, #fff 1px, transparent 1px, transparent ${this.state.containerStyle.snapSize}px)`
+					}:{})}
+					,transform:`scale(${this.state.containerStyle.zoomScale})`,position:'relative',backgroundColor: 'gray', width: '500px', height: '500px' }}
 				onMouseDown={this.onContainerMouseDown}
 				onWheel={this.onScrollMainContainer}
 				className={`MAIN_CONTAINER`}>
@@ -491,7 +513,7 @@ class Container extends React.Component {
 					<Cropper
 						key={bi}
 						zindex={bi}
-						data={{ ...b }}
+						data={this.snapGridify({ ...b })}
 						ref={r=>this.croppers[bi]=r}
 						isDragging={this.selectedBoxIndex === bi && this.isDraggingOld}
 						isCropping={this.selectedBoxIndex === bi && this.isCroppingOld}
@@ -515,7 +537,7 @@ class Container extends React.Component {
 						}}
 					/>
 				))}
-				{this.isDraggingNew && !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && <Cropper data={{ ...this.state.defaultStyle }} />}
+				{this.isDraggingNew && !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && <Cropper data={this.snapGridify({ ...this.state.defaultStyle })} />}
 				{this.debugMode &&
 					(() => {
 						console.clear();
