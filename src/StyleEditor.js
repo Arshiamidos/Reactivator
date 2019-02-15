@@ -5,7 +5,9 @@ class App extends Component {
   
 
   state={
-        _styles:this.props.data
+        _styles:this.props.data,
+        newStyleKey:'',
+        newStyleValue:'',
   }
 
   componentWillReceiveProps=(nxp)=>{
@@ -38,6 +40,18 @@ class App extends Component {
                     )
                 })
             }
+            <input type="text" value={this.state.newStyleKey} onChange={(ev)=>this.setState({newStyleKey:ev.target.value})}/>
+            <input type="text" value={this.state.newStyleValue} onChange={(ev)=>this.setState({newStyleValue:ev.target.value})}/>
+
+            <input type='button' value='confirm' onClick={()=>{
+
+                    let newStyle={}
+                    if(this.state.newStyleKey.trim().length>0){
+                        newStyle={[this.state.newStyleKey]:this.state.newStyleValue}
+                    }
+                    this.props.onConfirm({...this.state._styles,...newStyle})
+                
+                }}/>
 
         
         </div>

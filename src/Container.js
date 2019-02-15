@@ -64,6 +64,29 @@ class Container extends React.Component {
 		document.addEventListener('mouseup', this.onMouseUp);
 		
 	}
+	setCurrentRefrenceStyle=(index,newStyle)=>{
+		if(index===-1) {
+			this.setState({containerStyle:{
+				...this.state.containerStyle,
+				...newStyle
+			}})
+		}
+		else {
+
+			if(this.croppers[index]) {
+				this.setState({
+					boxes:[
+						...this.state.boxes.slice(0,index),
+						{
+							...this.state.boxes[index],
+							...newStyle
+						},
+						...this.state.boxes.slice(index+1),
+					]
+				})
+			} 
+		} 
+	}
 	getCurrentRefrenceStyle=(index)=>{
 		if(index===-1) return this.getStyles();//main container
 		else {
@@ -604,7 +627,7 @@ class Container extends React.Component {
 					this.state.toggleStyleEditor && 
 					<StyleEditor 
 					data={this.getCurrentRefrenceStyle(this.selectedBoxIndex)} 
-					onConfirm={()=>{}}
+					onConfirm={ newStyle =>{this.setCurrentRefrenceStyle(this.selectedBoxIndex,newStyle)}}
 					/>
 				}
 				
