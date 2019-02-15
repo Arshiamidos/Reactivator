@@ -1,8 +1,20 @@
-body{
-  background-color:#374350 
+.frcc{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
 }
+.fccc{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
-
+}
+.border-dashed{
+  border: 1px dashed #374350
+}
 .border {
   
   background: 

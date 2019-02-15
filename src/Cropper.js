@@ -1,5 +1,5 @@
 import React from 'react';
-import style from './style'
+import style from './CropperStyle'
 class App extends React.Component {
 	constructor() {
         super();
@@ -11,14 +11,40 @@ class App extends React.Component {
             _customeStringStyle: '',
 		};
     }
-    
+    getStyles=()=>{
+		return this.props.data
+	}
+	adaptor = c => {
+		if ( Number.isNaN(parseFloat(c.diffY)) ||
+			Math.abs(c.diffY)<10 ||
+			Math.abs(c.diffX)<10  
+		)
+		return ({});
+
+		return {
+			...c,
+			name:c.name,
+			lock:c.lock,
+			visible:c.visible,
+			top: c.top ? Math.abs(c.top) + 'px' : '0px',
+			left: c.left ? Math.abs(c.left) + 'px' : '0px',
+			height: !Number.isNaN(parseFloat(c.diffY)) ? Math.abs(c.diffY) + 'px' : '0px',
+			width: !Number.isNaN(parseFloat(c.diffX)) ? Math.abs(c.diffX) + 'px' : '0px'
+		};
+	};
 	renderHandles () {
+		const {isCropping,onCroping}=this.props
 		return (
 			<div>
-				<div data-dir='se' style={{...style.RegionHandleSE,cursor:this.props.isCropping?'crosshair':'se-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'se')} />
-				<div data-dir='sw' style={{...style.RegionHandleSW,cursor:this.props.isCropping?'crosshair':'sw-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'sw')} />
-				<div data-dir='nw' style={{...style.RegionHandleNW,cursor:this.props.isCropping?'crosshair':'nw-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'nw')} />
-				<div data-dir='ne' style={{...style.RegionHandleNE,cursor:this.props.isCropping?'crosshair':'ne-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'ne')} />
+				<div data-dir='ss'  style={{...style.RegionLineS,cursor:isCropping?'s-resize':'row-resize'}}   onMouseDown={(ev)=>onCroping(ev,'ss')} />
+				<div data-dir='ww'  style={{...style.RegionLineW,cursor:isCropping?'w-resize':'col-resize'}}   onMouseDown={(ev)=>onCroping(ev,'ww')} />
+				<div data-dir='ee'  style={{...style.RegionLineE,cursor:isCropping?'e-resize':'col-resize'}}   onMouseDown={(ev)=>onCroping(ev,'ee')} />
+				<div data-dir='nn'  style={{...style.RegionLineN,cursor:isCropping?'n-resize':'row-resize'}}   onMouseDown={(ev)=>onCroping(ev,'nn')} />
+
+				<div data-dir='se' style={{...style.RegionHandleSE,cursor:isCropping?'crosshair':'se-resize'}} onMouseDown={(ev)=>onCroping(ev,'se')} />
+				<div data-dir='sw' style={{...style.RegionHandleSW,cursor:isCropping?'crosshair':'sw-resize'}} onMouseDown={(ev)=>onCroping(ev,'sw')} />
+				<div data-dir='nw' style={{...style.RegionHandleNW,cursor:isCropping?'crosshair':'nw-resize'}} onMouseDown={(ev)=>onCroping(ev,'nw')} />
+				<div data-dir='ne' style={{...style.RegionHandleNE,cursor:isCropping?'crosshair':'ne-resize'}} onMouseDown={(ev)=>onCroping(ev,'ne')} />
 			</div>
 		);
 	}
@@ -37,11 +63,11 @@ class App extends React.Component {
 					position: 'absolute',
 					cursor: (this.props.isDragging?'grabbing':'grab'),
 					zIndex: (this.props.isSelected?10000:this.props.zindex),
-					...{ ...this.props },
+					...{ ...this.adaptor(this.props.data) },
 					...{ ...customStyle }
 				}}
 			>
-			 <p>{`Reactivator_${this.props.zindex} w:${this.props.width} h:${this.props.height} t:${this.props.top} l:${this.props.left}`}</p>
+			 <p>{`Reactivator_${this.props.zindex} w:${this.props.data.diffX} h:${this.props.data.diffY} t:${this.props.data.top} l:${this.props.data.left}`}</p>
 				<input
 					ref={r=>this.input=r}
 					onClick={()=>{this.input.focus()}}
