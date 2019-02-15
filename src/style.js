@@ -1,4 +1,4 @@
-const handleSize = 16;
+const handleSize = 8;
 const style = {
 	handleSize:handleSize,
 	Region: {

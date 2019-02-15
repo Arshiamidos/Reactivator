@@ -11,16 +11,14 @@ class App extends React.Component {
             _customeStringStyle: '',
 		};
     }
-    onMouseDown=(ev)=>{
-        this.props.onSelectBox()
-	}
+    
 	renderHandles () {
 		return (
 			<div>
-				<div data-dir='se' style={{...style.RegionHandleSE,cursor:this.props.isCropping?'crosshair':'se-resize'}} onMouseMove={(ev)=>this.props.onCroping(ev,'se')} />
-				<div data-dir='sw' style={{...style.RegionHandleSW,cursor:this.props.isCropping?'crosshair':'sw-resize'}} onMouseMove={(ev)=>this.props.onCroping(ev,'sw')} />
-				<div data-dir='nw' style={{...style.RegionHandleNW,cursor:this.props.isCropping?'crosshair':'nw-resize'}} onMouseMove={(ev)=>this.props.onCroping(ev,'nw')} />
-				<div data-dir='ne' style={{...style.RegionHandleNE,cursor:this.props.isCropping?'crosshair':'ne-resize'}} onMouseMove={(ev)=>this.props.onCroping(ev,'ne')} />
+				<div data-dir='se' style={{...style.RegionHandleSE,cursor:this.props.isCropping?'crosshair':'se-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'se')} />
+				<div data-dir='sw' style={{...style.RegionHandleSW,cursor:this.props.isCropping?'crosshair':'sw-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'sw')} />
+				<div data-dir='nw' style={{...style.RegionHandleNW,cursor:this.props.isCropping?'crosshair':'nw-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'nw')} />
+				<div data-dir='ne' style={{...style.RegionHandleNE,cursor:this.props.isCropping?'crosshair':'ne-resize'}} onMouseDown={(ev)=>this.props.onCroping(ev,'ne')} />
 			</div>
 		);
 	}
@@ -30,8 +28,7 @@ class App extends React.Component {
 		return (
 			<div
 
-                onMouseDown={this.onMouseDown}
-                onMouseMove={this.props.onMouseMove}
+                onMouseDown={()=>this.props.onSelectBox()}
                 onMouseUp={this.props.onMouseUp}
 				className={`CROPPER ${this.props.isSelected?'border':''} `}
 				style={{
