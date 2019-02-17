@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import cssKeys from './cssKeys'
+import Comp from './StyleEditorComp'
 
 class App extends Component {
   
@@ -22,6 +23,9 @@ class App extends Component {
             backgroundColor:'yellow',
             width:'30%',
         }}>
+        {
+            this.props.selectedIndex
+        }
             {
                 Object.keys(this.state._styles).map((k,ki)=>{
                     return (
@@ -52,6 +56,17 @@ class App extends Component {
                     this.props.onConfirm({...this.state._styles,...newStyle})
                 
                 }}/>
+
+            <hr/>
+            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='div' /> 
+            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='p' /> 
+            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='ul' /> 
+            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='li' /> 
+            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='input' /> 
+            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='p' /> 
+
+
+
 
         
         </div>

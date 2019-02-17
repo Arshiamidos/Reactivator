@@ -4,6 +4,7 @@ export default class TT extends React.Component {
 
     constructor(prop){
         super(prop);
+       
         this.state={
             data:{
                 width:'50px',
@@ -28,17 +29,11 @@ export default class TT extends React.Component {
     }
      
 
-/*     key:this.props.autoIncreament,
-    style:{width:'50px',height:'50px',backgroundColor:'magenta'},
-    onMouseDown:ev=>{
-        ev.stopPropagation();
-        this.props.setRef(this.props.autoIncreament)
-    },
-    ref:r=>this.props._onRefChild(r,this.props.autoIncreament),
- */
-
     render() {
-        return ( React.createElement(this.props.t.type,{})  );
+     
+        return ( React.createElement(this.props.t.type,{
+            style:{width:'50px',height:'50px',backgroundColor:'magenta'},
+        })  );
     }
 
 }

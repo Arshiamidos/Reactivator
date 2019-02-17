@@ -79,12 +79,12 @@ class Container extends React.Component {
 
 				this.croppers[index].setStyle(newStyle)
 
-			} else alert('index of '+index+' not found')
+			}
+			 throw new Error('Index Not Found '+__filename+':83')
 		} 
 	}
 	getCurrentRefrenceStyle=(index)=>{
 
-		console.log('get current style of ',this.croppers)
 		if(index===-1) return this.getStyles();//main container
 		else {
 			
@@ -522,9 +522,7 @@ class Container extends React.Component {
 						key={bi}
 						zindex={bi}
 						onRefChild={(ref,ai)=>{ 
-							alert('added to crops :525')
 						 this.croppers[ai]=ref
-						 console.log(this.croppers)
 						}}
 						data={this.snapGridify({ ...b })}
 						ref={r=>this.croppers[bi]=r}
@@ -579,10 +577,11 @@ class Container extends React.Component {
 			t,
 			Object.keys(this.croppers).length+1,
 			(r)=>{
-				alert(':580')
-				console.log('set select box index to '+r)
 				this.selectedBoxIndex=r;
-			})
+			},
+			(ref,lastIndex)=>this.croppers[lastIndex]=ref
+			)
+		
 	}
 	
 	render() {

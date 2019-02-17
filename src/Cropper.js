@@ -43,16 +43,26 @@ class App extends React.Component {
 	
 
 
-	addChild=(t,autoIncreament,setRef)=>{
+	addChild=(t,lastIndex,updateSelectedBoxIndex,setRef)=>{
 
 		
-
+		
 		this.setState({childrens:[...this.state.childrens,
-		<T  
+
+		 <T  
+			key={lastIndex}
 			t={t}
-			autoIncreament={autoIncreament} 
+			autoIncreament={lastIndex} 
 			setRef={setRef} 
-			_onRefChild={this.props.onRefChild}/>]})
+			onMouseDown={ev=>{
+				ev.stopPropagation();
+					updateSelectedBoxIndex(lastIndex)
+				}}
+			ref={r=>setRef(r,lastIndex)}
+			/> 
+		
+		
+		]})
 
 	}
 	
