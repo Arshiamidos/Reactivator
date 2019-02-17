@@ -6,6 +6,8 @@ import RowLayerItem from './RowLayerItem'
 import StyleEditor from './StyleEditor'
 
 class Container extends React.Component {
+	
+	
 	constructor() {
 		super();
 
@@ -74,28 +76,24 @@ class Container extends React.Component {
 		else {
 
 			if(this.croppers[index]) {
-				this.setState({
-					boxes:[
-						...this.state.boxes.slice(0,index),
-						{
-							...this.state.boxes[index],
-							...newStyle
-						},
-						...this.state.boxes.slice(index+1),
-					]
-				})
-			} 
+
+				this.croppers[index].setStyle(newStyle)
+
+			} else alert('index of '+index+' not found')
 		} 
 	}
 	getCurrentRefrenceStyle=(index)=>{
+
+		console.log('get current style of ',this.croppers)
 		if(index===-1) return this.getStyles();//main container
 		else {
-
+			
 			if(this.croppers[index]) {
 				return this.croppers[index].getStyles()
 			} else {
 				return ({})
-			}
+			} 
+
 		} 
 
 	}
@@ -128,7 +126,6 @@ class Container extends React.Component {
 		return this.state.containerStyle
 	}
 	getMousePosition = (ev) => ({ x: ev.pageX, y: ev.pageY });
-
 	onContainerMouseDown = (ev) => {
 		if (ev.target.className.search('MAIN_CONTAINER') < 0) {
 			//child selected
@@ -232,7 +229,6 @@ class Container extends React.Component {
 		}
 			
 	};
-	
 	onCropingOld = (ev, boxIndex, side) => {
 		if (this.selectedBoxIndex === boxIndex) {
 			
@@ -398,7 +394,6 @@ class Container extends React.Component {
 
 		}
 	};
-
 	isValidStyle = c => {
 		if ( 
 			Number.isNaN(parseFloat(c.diffY)) ||
@@ -427,7 +422,6 @@ class Container extends React.Component {
 						value="remove selected"
 						onClick={() => {
 							if(this.selectedBoxIndex===-1){
-								alert('no object selected')
 								return;
 							}
 							this.setState({
@@ -467,13 +461,6 @@ class Container extends React.Component {
 
 					<input
 						type="button"
-						value={`toggle Layer Editor: ${this.state.toggleLayerLine+""}`}
-						onClick={() => {this.setState({toggleLayerLine:!this.state.toggleLayerLine})}}
-					/>
-
-
-					<input
-						type="button"
 						value="undo"
 						onClick={() => {
 
@@ -500,7 +487,6 @@ class Container extends React.Component {
 			</div>
 		)
 	}
-
 	snapGridify=(data)=>{
 		if(this.state.toggleSnapGrid){
 			let ss=this.state.containerStyle.snapSize
@@ -515,7 +501,6 @@ class Container extends React.Component {
 		return data;
 
 	}
-
 	showMainContainer=()=>{
 
 		return(
@@ -536,6 +521,11 @@ class Container extends React.Component {
 					<Cropper
 						key={bi}
 						zindex={bi}
+						onRefChild={(ref,ai)=>{ 
+							alert('added to crops :525')
+						 this.croppers[ai]=ref
+						 console.log(this.croppers)
+						}}
 						data={this.snapGridify({ ...b })}
 						ref={r=>this.croppers[bi]=r}
 						isDragging={this.selectedBoxIndex === bi && this.isDraggingOld}
@@ -554,7 +544,6 @@ class Container extends React.Component {
 							this.selectedBoxIndex = bi;
 						}}
 						onSelectBox={() => {
-							
 							this.selectedBoxIndex = bi;
 							this.isDraggingOld = true;
 						}}
@@ -569,7 +558,6 @@ class Container extends React.Component {
 			</div>
 		)
 	}
-
 	showLayers=()=>{
 		return(
 			<div style={{width:'100%',height:'100%'}}>
@@ -582,6 +570,19 @@ class Container extends React.Component {
 				}
 			</div>
 		)
+	}
+	addChild=(t,index)=>{
+		if(index===-1){
+			return;
+		}
+		this.croppers[this.selectedBoxIndex].addChild(
+			t,
+			Object.keys(this.croppers).length+1,
+			(r)=>{
+				alert(':580')
+				console.log('set select box index to '+r)
+				this.selectedBoxIndex=r;
+			})
 	}
 	
 	render() {
@@ -605,30 +606,32 @@ class Container extends React.Component {
 						{this.showMainContainer()}
 
 					</div>
-{
-					this.state.toggleLayerLine 
-					&& 
-					<div style={{
-						display:'flex',
-						flexDirection:'column',
-						backgroundColor:'green',
-						width:'100%',
-						overflow:'auto',
-						flex:`1 1 ${100-this.state.mainContainerFlexPercent}%`,
-					}}>
-						{this.showLayers()}
+					{
+						this.state.toggleLayerLine 
+						&& 
+						<div style={{
+							display:'flex',
+							flexDirection:'column',
+							backgroundColor:'green',
+							width:'100%',
+							overflow:'auto',
+							flex:`1 1 ${100-this.state.mainContainerFlexPercent}%`,
+						}}>
+							{this.showLayers()}
 
-					</div>
-}
+						</div>
+					}
 					
 				</div>
 
 				{
 					this.state.toggleStyleEditor && 
 					<StyleEditor 
-					data={this.getCurrentRefrenceStyle(this.selectedBoxIndex)} 
-					onConfirm={ newStyle =>{this.setCurrentRefrenceStyle(this.selectedBoxIndex,newStyle)}}
-					/>
+						selectedIndex={this.selectedBoxIndex}
+						onDragTemplate={(t)=>{this.addChild(t,this.selectedBoxIndex) }}
+						data={this.getCurrentRefrenceStyle(this.selectedBoxIndex)} 
+						onConfirm={ newStyle =>{this.setCurrentRefrenceStyle(this.selectedBoxIndex,newStyle)}}
+						/>
 				}
 				
 

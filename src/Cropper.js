@@ -1,20 +1,27 @@
 import React from 'react';
 import style from './CropperStyle'
+import T from './T'
 class App extends React.Component {
-	constructor() {
-        super();
+	constructor(props) {
+    super(props);
         
-        this.isDragging=false;
+    this.isDragging=false;
 
 		this.state = {
+			data:props.data,
+			childrens:[],
 			customStyle: {},
             _customeStringStyle: '',
 		};
     }
-    getStyles=()=>{
-		return this.props.data
+	getStyles=()=>{
+			return this.state.data
 	}
-	adaptor = c => {
+	setStyle=(data)=>{
+		this.setState({data})
+	}
+	adaptor = (c={}) => {
+		
 		if ( Number.isNaN(parseFloat(c.diffY)) ||
 			Math.abs(c.diffY)<10 ||
 			Math.abs(c.diffX)<10  
@@ -32,6 +39,23 @@ class App extends React.Component {
 			width: !Number.isNaN(parseFloat(c.diffX)) ? Math.abs(c.diffX) + 'px' : '0px'
 		};
 	};
+	
+	
+
+
+	addChild=(t,autoIncreament,setRef)=>{
+
+		
+
+		this.setState({childrens:[...this.state.childrens,
+		<T  
+			t={t}
+			autoIncreament={autoIncreament} 
+			setRef={setRef} 
+			_onRefChild={this.props.onRefChild}/>]})
+
+	}
+	
 	renderHandles () {
 		const {isCropping,onCroping}=this.props
 		return (
@@ -53,9 +77,8 @@ class App extends React.Component {
 		const { customStyle } = this.state;
 		return (
 			<div
-
-                onMouseDown={()=>this.props.onSelectBox()}
-                onMouseUp={this.props.onMouseUp}
+				onMouseDown={()=>this.props.onSelectBox()}
+				onMouseUp={this.props.onMouseUp}
 				className={`CROPPER ${this.props.isSelected?'border':''} `}
 				style={{
 					border: '1px dashed black',
@@ -63,29 +86,15 @@ class App extends React.Component {
 					position: 'absolute',
 					cursor: (this.props.isDragging?'grabbing':'grab'),
 					zIndex: (this.props.isSelected?10000:this.props.zindex),
-					...{ ...this.adaptor(this.props.data) },
+					...{ ...this.adaptor(this.state.data) },
 					...{ ...customStyle }
 				}}
 			>
-			 <p>{`Reactivator_${this.props.zindex} w:${this.props.data.diffX} h:${this.props.data.diffY} t:${this.props.data.top} l:${this.props.data.left}`}</p>
-				<input
-					ref={r=>this.input=r}
-					onClick={()=>{this.input.focus()}}
-					onChange={(e) => this.setState({ _customeStringStyle: e.target.value })}
-					value={this.state._customeStringStyle}
-					multiple
-				/>
-				<input
-					type={'button'}
-					onClick={() => {
-					
-						this.setState({
-							customStyle: JSON.parse(`{  ${ (this.state._customeStringStyle) }  }`)
-						});
-					}}
-					value={'Confirm'}
-				/>
-				{this.props.isSelected ? this.renderHandles() : null}
+			 <p>{`Reactivator_${this.props.zindex} w:${this.state.data.diffX} h:${this.state.data.diffY} t:${this.state.data.top} l:${this.state.data.left}`}</p>
+			 
+			
+			 {this.props.isSelected ? this.renderHandles() : null}
+			 {this.state.childrens}
 			</div>
 		);
 	}
