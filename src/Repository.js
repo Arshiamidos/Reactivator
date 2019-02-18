@@ -14,3 +14,11 @@ export function setStore(i,refr){
 export function resetStore(){
     croppers={}
 }
+export function deSelectionStore(){
+    
+    Object.keys(croppers)
+    .forEach(cropperIndex=>{
+        croppers[cropperIndex].setSelected(false)
+    })
+
+}

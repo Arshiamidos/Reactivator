@@ -12,8 +12,8 @@ class App extends React.PureComponent {
                     data:{
                         top:0,
                         left:0,
-                        diffX:0,
-                        diffY:0,
+                        height:50,
+                        width:50,
                     },
                     props:{}
                     

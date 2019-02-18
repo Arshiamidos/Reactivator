@@ -1,7 +1,7 @@
 import React from 'react'
 import style from './CropperStyle'
 import Redux from './Redux'
-import {getStore,setStore} from './Repository'
+import {getStore,setStore,deSelectionStore} from './Repository'
 
 const getRandomRGB=()=>{
     const rgb=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
@@ -29,7 +29,7 @@ export default class T extends React.Component {
         }
     }
 
-    addChild = (t, lastIndex, updateSelectedBoxIndex, setRef) => {
+    addChild = (t, lastIndex) => {
 
 		this.setState({
 			childrens: [...this.state.childrens,
@@ -39,10 +39,14 @@ export default class T extends React.Component {
                 autoIncreament={lastIndex}
                 onMouseDown={ev => {
                     ev.stopPropagation();
+                    deSelectionStore();
                     this.R.selectedBoxIndex=lastIndex
                     getStore(lastIndex).setSelected(true)
                     this.R.isDraggingOld = true;
+                    this.props.startPropagtion()
+                    
                 }}
+                startPropagtion={this.props.startPropagtion}
                 ref={r => setStore(lastIndex,r)}
                 zindex={lastIndex}
                 onRefChild={(ref,ai)=>setStore(ai,ref)}
@@ -56,13 +60,16 @@ export default class T extends React.Component {
                     this.R.isDraggingOld = false;
                     this.R.isCroppingOld = false;
                     this.R.sideCropping = '';
+                    this.props.startPropagtion()
                 }}
                 onCroping={(ev, side) => {
                     ev.stopPropagation();
                     this.R.isCroppingOld = true;
                     this.R.sideCropping = side;
                     this.R.selectedBoxIndex = lastIndex;
+                    this.props.startPropagtion()
                 }}
+                        
 			/>
 
 
@@ -139,8 +146,6 @@ export default class T extends React.Component {
 
     render() {
      
-        console.log(this.state.data)
-
         return ( 
             <React.Fragment>
                 {    

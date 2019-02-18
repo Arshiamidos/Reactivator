@@ -4,7 +4,7 @@ import './App.css';
 import _ from 'lodash';
 import RowLayerItem from './RowLayerItem'
 import StyleEditor from './StyleEditor'
-import {getStore,setStore} from './Repository'
+import {getStore,setStore,deSelectionStore} from './Repository'
 import Redux from './Redux';
 import T from './T';
 
@@ -88,7 +88,7 @@ class Container extends React.Component {
 
 			
 			if(getStore(index)) {
-
+				JSON.stringify(getStore(index).getStyles())
 				return getStore(index).getStyles()
 			} else {
 				return ({})
@@ -98,29 +98,24 @@ class Container extends React.Component {
 
 	}
 	onScrollMainContainer=(ev)=>{
+		if( this.state.containerStyle.zoomScale>=0.5 && 
+			this.state.containerStyle.zoomScale<=2.0)
+		{
 
-		
+			this.setState({
+				containerStyle:{
+					...this.state.containerStyle,
+					zoomScale:
+					_.clamp(
+						this.state.containerStyle.zoomScale+((Math.sign(ev.deltaY)*1 )/10),
+						0.5,
+						2.0
+					)
+					
+				}
+			})
 
-			if( this.state.containerStyle.zoomScale>=0.5 && 
-			 this.state.containerStyle.zoomScale<=2.0)
-			{
-
-				this.setState({
-					containerStyle:{
-						...this.state.containerStyle,
-						zoomScale:
-						_.clamp(
-							this.state.containerStyle.zoomScale+((Math.sign(ev.deltaY)*1 )/10),
-							0.5,
-							2.0
-						)
-						
-					}
-				})
-
-			}
-		
-
+		}
 	}
 	getStyles=()=>{
 		return this.state.containerStyle
@@ -135,7 +130,7 @@ class Container extends React.Component {
 			getStore(this.R.selectedBoxIndex).setSelected(false)
 		}
 		this.R.selectedBoxIndex = -1;
-		this.isDraggingNew = true;
+		this.R.isDraggingNew = true;
 		this.setState({defaultStyle:{
 			...this.state.defaultStyle,
 			anchorX: this.getMousePosition(ev).x-this.container.getBoundingClientRect().left,
@@ -203,45 +198,55 @@ class Container extends React.Component {
 		if (ev.buttons === 1) {
 			if (this.R.isDraggingOld && !this.R.isCroppingOld) this.onMouseMoveOldBox(ev, this.R.selectedBoxIndex);
 			if (this.R.isCroppingOld) this.onCroppingOld(ev, this.R.selectedBoxIndex, this.R.sideCropping);
-			if (this.isDraggingNew) this.onCreating(ev);
+			if (this.R.isDraggingNew) this.onCreating(ev);
 		}
 	};
 	onMouseUp = (ev) => {
 
-		this.isDraggingNew = false;
+		this.R.isDraggingNew = false;
 
 		if (!_.isEmpty(this.isValidStyle(this.state.defaultStyle)) )
 		{
 
-			const bi=this.state.boxes.length
+			const lastIndex=this.state.boxes.length
 
 			this.setState({
 				boxes: [ ...this.state.boxes,
-					<Cropper
-						key={bi}
-						zindex={bi}
+					<T
+						key={lastIndex}
+						t={{type:'div',data:this.state.defaultStyle}}
+						autoIncreament={lastIndex}
+						onMouseDown={ev => {
+							ev.stopPropagation();
+							deSelectionStore();
+							this.R.selectedBoxIndex=lastIndex
+							getStore(lastIndex).setSelected(true)
+							this.R.isDraggingOld = true;
+							this.setState({})//for parent to this.forceUpdate tricky because it's a refrence that don't apply on main renderer
+							
+						}}
+						startPropagtion={()=>{this.setState({})}}//for child call to update main renderer
+						ref={r => setStore(lastIndex,r)}
+						zindex={lastIndex}
 						onRefChild={(ref,ai)=>setStore(ai,ref)}
-						data={this.snapGridify({ ...this.state.defaultStyle })}
-						ref={r=>setStore(bi,r)}
-						isDragging={this.R.selectedBoxIndex === bi && this.R.isDraggingOld}
-						isCropping={this.R.selectedBoxIndex === bi && this.R.isCroppingOld}
-						isSelected={this.R.selectedBoxIndex === bi}
+
+						isDragging={this.R.selectedBoxIndex === lastIndex && this.R.isDraggingOld}
+						isCropping={this.R.selectedBoxIndex === lastIndex && this.R.isCroppingOld}
+						isSelected={this.R.selectedBoxIndex === lastIndex}
 						
 						onMouseUp={(ev) => {
+							ev.stopPropagation();
 							this.R.isDraggingOld = false;
 							this.R.isCroppingOld = false;
 							this.R.sideCropping = '';
-							this.setState({ mouseFirstCapture: { x: 0, y: 0, h: 0, w: 0 } });
+							this.setState({})
 						}}
 						onCroping={(ev, side) => {
+							ev.stopPropagation();
 							this.R.isCroppingOld = true;
 							this.R.sideCropping = side;
-							this.R.selectedBoxIndex = bi;
-						}}
-						onSelectBox={() => {
-							this.R.selectedBoxIndex = bi;
-							getStore(bi).setSelected(true)
-							this.R.isDraggingOld = true;
+							this.R.selectedBoxIndex = lastIndex;
+							this.setState({})
 						}}
 					/>
 				
@@ -281,7 +286,7 @@ class Container extends React.Component {
 			if(side==='ss'){
 
 				getStore(boxIndex).setStyles({
-					diffY : this.getMousePosition(ev).y 
+					height : this.getMousePosition(ev).y 
 							-this.container.getBoundingClientRect().top 
 							-getStore(boxIndex).getStyles().top, 
 				 })
@@ -509,18 +514,18 @@ class Container extends React.Component {
 				{this.state.boxes}
 
 				{
-					this.isDraggingNew && 
+					this.R.isDraggingNew && 
 					!_.isEmpty(this.isValidStyle(this.state.defaultStyle)) &&
 					<T t={{type:"div",data:this.snapGridify({ ...this.state.defaultStyle })}} />
 				}
 				
-				{/* <Cropper key={-2} data={this.snapGridify({ ...this.state.defaultStyle })} /> */}
-
-				{this.debugMode &&
+				{
+					this.debugMode &&
 					(() => {
 						console.clear();
 						console.table(this.state.boxes);
-					})()}
+					})()
+				}
 			</div>
 		)
 	}
@@ -544,10 +549,6 @@ class Container extends React.Component {
 		getStore(this.R.selectedBoxIndex).addChild(
 			t,
 			Object.keys(getStore()).length+1,
-			(r)=>{
-				this.R.selectedBoxIndex=r;
-			},
-			(ref,lastIndex)=>setStore(lastIndex,ref)
 			)
 		
 	}
@@ -591,7 +592,8 @@ class Container extends React.Component {
 					
 				</div>
 
-
+{this.R.selectedBoxIndex}
+{console.log(this.R.selectedBoxIndex)}
 				{
 					this.state.toggleStyleEditor && 
 					<StyleEditor 
