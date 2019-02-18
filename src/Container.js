@@ -4,15 +4,18 @@ import './App.css';
 import _ from 'lodash';
 import RowLayerItem from './RowLayerItem'
 import StyleEditor from './StyleEditor'
+import {connect} from 'react-redux'
+import {setSelected,toggleDraggingNew,toggleCroppingOld,toggleDraggingOld} from './redux/actions/canvas'
+import {getStore,setStore} from './Repository'
+
 
 class Container extends React.Component {
 	
 	
-	constructor() {
-		super();
+	constructor(props) {
+		super(props);
 
 		this.debugMode = false;
-		this.croppers={}
 		this.sideCropping = '';
 		this.isDraggingOld = false;
 		this.isDraggingNew = false;
@@ -41,8 +44,8 @@ class Container extends React.Component {
 				visible:true,
 				anchorX: null,
 				anchorY: null,
-				diffX: null,
-				diffY: null,
+				width: null,
+				height: null,
 				top: null,
 				left: null,
 
@@ -75,21 +78,21 @@ class Container extends React.Component {
 		}
 		else {
 
-			if(this.croppers[index]) {
+			if(getStore(index)) {
 
-				this.croppers[index].setStyle(newStyle)
+				getStore(index).setStyle(newStyle)
 
-			}
-			 throw new Error('Index Not Found '+__filename+':83')
+			}else throw new Error('Index Not Found '+__filename+':83')
 		} 
 	}
 	getCurrentRefrenceStyle=(index)=>{
 
 		if(index===-1) return this.getStyles();//main container
 		else {
-			
-			if(this.croppers[index]) {
-				return this.croppers[index].getStyles()
+
+			if(getStore(index)) {
+
+				return getStore(index).getStyles()
 			} else {
 				return ({})
 			} 
@@ -127,10 +130,12 @@ class Container extends React.Component {
 	}
 	getMousePosition = (ev) => ({ x: ev.pageX, y: ev.pageY });
 	onContainerMouseDown = (ev) => {
-		if (ev.target.className.search('MAIN_CONTAINER') < 0) {
-			//child selected
+		if (ev.target.className.search('MAIN_CONTAINER') < 0) {//child selected
 			ev.preventDefault();
 			return;
+		}
+		if(this.selectedBoxIndex>=0){
+			getStore(this.selectedBoxIndex).setSelected(false)
 		}
 		this.selectedBoxIndex = -1;
 		this.isDraggingNew = true;
@@ -143,55 +148,55 @@ class Container extends React.Component {
 		});
 	};
 	onCreating = (ev) => {
-		let diffX = 
+		let width = 
 			this.getMousePosition(ev).x
 			-this.container.getBoundingClientRect().left
 			-this.state.defaultStyle.anchorX;
 		
-		let diffY = 
+		let height = 
 			this.getMousePosition(ev).y
 			-this.container.getBoundingClientRect().top
 			-this.state.defaultStyle.anchorY;
 
-		if (diffX > 0 && diffY > 0) {
+		if (width > 0 && height > 0) {
 			this.setState({defaultStyle:{
 				...this.state.defaultStyle,
 				top: this.state.defaultStyle.anchorY,
 				left: this.state.defaultStyle.anchorX,
-				diffX,
-				diffY}
+				width,
+				height}
 				
 			});
 		}
-		if (diffX > 0 && diffY < 0) {
+		if (width > 0 && height < 0) {
 			this.setState({defaultStyle:{
 				...this.state.defaultStyle,
-				top: this.state.defaultStyle.anchorY + diffY,
+				top: this.state.defaultStyle.anchorY + height,
 				left: this.state.defaultStyle.anchorX,
-				diffX,
-				diffY
+				width,
+				height
 			}
 				
 			});
 		}
-		if (diffX < 0 && diffY > 0) {
+		if (width < 0 && height > 0) {
 			this.setState({defaultStyle:{
 				...this.state.defaultStyle,
 				top: this.state.defaultStyle.anchorY,
-				left: this.state.defaultStyle.anchorX + diffX,
-				diffX,
-				diffY
+				left: this.state.defaultStyle.anchorX + width,
+				width,
+				height
 			}
 				
 			});
 		}
-		if (diffX < 0 && diffY < 0) {
+		if (width < 0 && height < 0) {
 			this.setState({defaultStyle:{
 				...this.state.defaultStyle,
-				top: this.state.defaultStyle.anchorY + this.state.defaultStyle.diffY,
-				left: this.state.defaultStyle.anchorX + this.state.defaultStyle.diffX,
-				diffX,
-				diffY
+				top: this.state.defaultStyle.anchorY + this.state.defaultStyle.height,
+				left: this.state.defaultStyle.anchorX + this.state.defaultStyle.width,
+				width,
+				height
 			}
 				
 			});
@@ -200,7 +205,7 @@ class Container extends React.Component {
 	onMouseMove = (ev) => {
 		if (ev.buttons === 1) {
 			if (this.isDraggingOld && !this.isCroppingOld) this.onMouseMoveOldBox(ev, this.selectedBoxIndex);
-			if (this.isCroppingOld) this.onCropingOld(ev, this.selectedBoxIndex, this.sideCropping);
+			if (this.isCroppingOld) this.onCroppingOld(ev, this.selectedBoxIndex, this.sideCropping);
 			if (this.isDraggingNew) this.onCreating(ev);
 		}
 	};
@@ -210,15 +215,47 @@ class Container extends React.Component {
 
 		if (!_.isEmpty(this.isValidStyle(this.state.defaultStyle)) )
 		{
+
+			const bi=this.state.boxes.length
+
 			this.setState({
-				boxes: [ ...this.state.boxes,{ ...this.state.defaultStyle } ],
+				boxes: [ ...this.state.boxes,
+					<Cropper
+					key={bi}
+					zindex={bi}
+					onRefChild={(ref,ai)=>setStore(ai,ref)}
+					data={this.snapGridify({ ...this.state.defaultStyle })}
+					ref={r=>setStore(bi,r)}
+					isDragging={this.selectedBoxIndex === bi && this.isDraggingOld}
+					isCropping={this.selectedBoxIndex === bi && this.isCroppingOld}
+					isSelected={this.selectedBoxIndex === bi}
+					
+					onMouseUp={(ev) => {
+						this.isDraggingOld = false;
+						this.isCroppingOld = false;
+						this.sideCropping = '';
+						this.setState({ mouseFirstCapture: { x: 0, y: 0, h: 0, w: 0 } });
+					}}
+					onCroping={(ev, side) => {
+						this.isCroppingOld = true;
+						this.sideCropping = side;
+						this.selectedBoxIndex = bi;
+					}}
+					onSelectBox={() => {
+						this.selectedBoxIndex = bi;
+						getStore(bi).setSelected(true)
+						this.isDraggingOld = true;
+					}}
+				/>
+				
+				],
 				
 				defaultStyle:{
 					...this.state.defaultStyle,
 					anchorX: null,
 					anchorY: null,
-					diffX: null,
-					diffY: null,
+					width: null,
+					height: null,
 					top: null,
 					left: null
 				}
@@ -229,176 +266,131 @@ class Container extends React.Component {
 		}
 			
 	};
-	onCropingOld = (ev, boxIndex, side) => {
+	onCroppingOld = (ev, boxIndex, side) => {
+
 		if (this.selectedBoxIndex === boxIndex) {
 			
-			const diffY = 
+			
+			const height = 
 				this.getMousePosition(ev).y 
 				-this.container.getBoundingClientRect().top
-				-this.state.boxes[boxIndex].top;
+				-getStore(boxIndex).getStyles().top;
 
-			const diffX = 
+			const width = 
 				this.getMousePosition(ev).x 
 				-this.container.getBoundingClientRect().left
-				-this.state.boxes[boxIndex].left;
+				-getStore(boxIndex).getStyles().left;
 
 			if(side==='ss'){
 
-				this.setState({boxes:[
-					...this.state.boxes.slice(0,boxIndex),
-					{
-					   ...this.state.boxes[boxIndex],
-					   diffY : this.getMousePosition(ev).y 
-							   -this.container.getBoundingClientRect().top 
-							   -this.state.boxes[boxIndex].top, 
-					},
-					...this.state.boxes.slice(boxIndex+1)
-				]})
-
+				getStore(boxIndex).setStyles({
+					diffY : this.getMousePosition(ev).y 
+							-this.container.getBoundingClientRect().top 
+							-getStore(boxIndex).getStyles().top, 
+				 })
 
 			}else if(side==='ww'){
 
-				this.setState({boxes:[
-					...this.state.boxes.slice(0,boxIndex),
-					{
-					   ...this.state.boxes[boxIndex],
+				getStore(boxIndex).setStyles({
 					   left : this.getMousePosition(ev).x-this.container.getBoundingClientRect().left  ,
-					   diffX : Math.abs(this.state.boxes[boxIndex].diffX) - diffX ,
-					},
-					...this.state.boxes.slice(boxIndex+1)
-				]})
-				   
+					   width : Math.abs(getStore(boxIndex).getStyles().width) - width ,
+					})
 
 			} else if(side==='nn'){
 
-				this.setState({boxes:[
-					...this.state.boxes.slice(0,boxIndex),
-					{
-					   ...this.state.boxes[boxIndex],
+				getStore(boxIndex).setStyles({
 					   top : this.getMousePosition(ev).y -this.container.getBoundingClientRect().top ,
-					   diffY : Math.abs(this.state.boxes[boxIndex].diffY)
-								
-								- diffY,
-					},
-					...this.state.boxes.slice(boxIndex+1)
-				]})
+					   height : Math.abs(getStore(boxIndex).getStyles().height)- height,
+				 })
+					
 
 			}else if(side==='ee'){
 
-				this.setState({boxes:[
-					...this.state.boxes.slice(0,boxIndex),
-					{
-					   ...this.state.boxes[boxIndex],
-					   diffX :-this.getMousePosition(ev).x 
-					   +this.container.getBoundingClientRect().left
-					   + Math.abs(this.state.boxes[boxIndex].left),
-					},
-					...this.state.boxes.slice(boxIndex+1)
-				]})
-
+				getStore(boxIndex).setStyles({
+					width :-this.getMousePosition(ev).x+this.container.getBoundingClientRect().left
+								+ Math.abs(getStore(boxIndex).getStyles().left),
+				 })
+					
 			}else if (side === 'sw') {
 				
-				let _diffX=Math.abs(this.state.boxes[boxIndex].diffX) - diffX;
-				let _diffY=this.getMousePosition(ev).y 
+				let _width=Math.abs(getStore(boxIndex).getStyles().width) - width;
+				let _height=this.getMousePosition(ev).y 
 							-this.container.getBoundingClientRect().top
-							-this.state.boxes[boxIndex].top
+							-getStore(boxIndex).getStyles().top
 
-				this.setState({boxes:[
-					 ...this.state.boxes.slice(0,boxIndex),
-					 {
-						...this.state.boxes[boxIndex],
-						left : this.getMousePosition(ev).x 
-							   -this.container.getBoundingClientRect().left,
-
-						diffY :_.clamp(Math.abs(_diffY),10,Math.abs(_diffY)) , 
-						diffX :_.clamp(Math.abs(_diffX),10,Math.abs(_diffX)),
-					
-					 },
-					 ...this.state.boxes.slice(boxIndex+1)
-				 ]})
-					
+				getStore(boxIndex).setStyles({
+					left : this.getMousePosition(ev).x 
+						   -this.container.getBoundingClientRect().left,
+					height :_.clamp(Math.abs(_height),10,Math.abs(_height)) , 
+					width :_.clamp(Math.abs(_width),10,Math.abs(_width)),
 				
+				 })
 				
 			}else if (side === 'se') {
 
-				let _diffX=-this.getMousePosition(ev).x +this.container.getBoundingClientRect().left + Math.abs(this.state.boxes[boxIndex].left)
-				let _diffY=-this.getMousePosition(ev).y  +this.container.getBoundingClientRect().top+ Math.abs(this.state.boxes[boxIndex].top)
+				let _width=-this.getMousePosition(ev).x +this.container.getBoundingClientRect().left + Math.abs(getStore(boxIndex).getStyles().left)
+				let _height=-this.getMousePosition(ev).y  +this.container.getBoundingClientRect().top+ Math.abs(getStore(boxIndex).getStyles().top)
+				getStore(boxIndex).setStyles({
+					width :_.clamp(Math.abs(_width),10,Math.abs(_width)),
+					height :_.clamp(Math.abs(_height),10,Math.abs(_height)),
+					
+				 })
 				
-				this.setState({boxes:[
-					...this.state.boxes.slice(0,boxIndex),
-					{
-					   ...this.state.boxes[boxIndex],
-					   diffX :_.clamp(Math.abs(_diffX),10,Math.abs(_diffX)),
-					   diffY :_.clamp(Math.abs(_diffY),10,Math.abs(_diffY)),
-					   
-					},
-					...this.state.boxes.slice(boxIndex+1)
-				]})
 			}else if (side === 'nw') {
-				let _diffY=Math.abs(this.state.boxes[boxIndex].diffY) - diffY
-				let _diffX=Math.abs(this.state.boxes[boxIndex].diffX) - diffX
+				let _height=Math.abs(getStore(boxIndex).getStyles().height) - height
+				let _width=Math.abs(getStore(boxIndex).getStyles().width) - width
+				getStore(boxIndex).setStyles({
+					top : this.getMousePosition(ev).y  -this.container.getBoundingClientRect().top,
+					left : this.getMousePosition(ev).x  -this.container.getBoundingClientRect().left,
+					height :_.clamp(Math.abs(_height),10,Math.abs(_height)) ,
+					width :_.clamp(Math.abs(_width),10,Math.abs(_width)),
+				 })
+
 				
-				this.setState({boxes:[
-					...this.state.boxes.slice(0,boxIndex),
-					{
-					   ...this.state.boxes[boxIndex],
-					   top : this.getMousePosition(ev).y  -this.container.getBoundingClientRect().top,
-					   left : this.getMousePosition(ev).x  -this.container.getBoundingClientRect().left,
-					   diffY :_.clamp(Math.abs(_diffY),10,Math.abs(_diffY)) ,
-					   diffX :_.clamp(Math.abs(_diffX),10,Math.abs(_diffX)),
-					},
-					...this.state.boxes.slice(boxIndex+1)
-				]})
 			}else if (side === 'ne') {
 
-				let _diffX=-this.getMousePosition(ev).x +this.container.getBoundingClientRect().left + Math.abs(this.state.boxes[boxIndex].left)
-				let _diffY=Math.abs(this.state.boxes[boxIndex].diffY) - diffY
-
-				this.setState({boxes:[
-					...this.state.boxes.slice(0,boxIndex),
-					{
-					   ...this.state.boxes[boxIndex],
-					   top : this.getMousePosition(ev).y-this.container.getBoundingClientRect().top,
-					   diffX :_.clamp(Math.abs(_diffX),10,Math.abs(_diffX)),
-					   diffY :_.clamp(Math.abs(_diffY),10,Math.abs(_diffY)),
-					},
-					...this.state.boxes.slice(boxIndex+1)
-				]})
+				let _width=-this.getMousePosition(ev).x +this.container.getBoundingClientRect().left + Math.abs(getStore(boxIndex).getStyles().left)
+				let _height=Math.abs(getStore(boxIndex).getStyles().height) - height
+				getStore(boxIndex).setStyles({
+					top : this.getMousePosition(ev).y-this.container.getBoundingClientRect().top,
+					width :_.clamp(Math.abs(_width),10,Math.abs(_width)),
+					height :_.clamp(Math.abs(_height),10,Math.abs(_height)),
+				 })
+				
 				
 			}
 		}
 	};
 	onMouseMoveOldBox = (ev, bi) => {
+		
 		if ( this.selectedBoxIndex === bi ) {
 			
 			if (this.state.mouseFirstCapture.x === 0) {
 				this.setState({
 					mouseFirstCapture: {
 						...this.state.mouseFirstCapture,
-						y: this.getMousePosition(ev).y - this.state.boxes[bi].top,
-						x: this.getMousePosition(ev).x - this.state.boxes[bi].left
+						y: this.getMousePosition(ev).y - getStore(bi).getStyles().top,
+						x: this.getMousePosition(ev).x - getStore(bi).getStyles().left
 					}
 				});
 				return;
 			}
+
+			getStore(bi).setStyles({
+				...getStore(bi).getStyles(),
+				top : Math.abs(this.getMousePosition(ev).y - this.state.mouseFirstCapture.y),
+				left : Math.abs(this.getMousePosition(ev).x - this.state.mouseFirstCapture.x),
+			 })
 			
-			this.setState({boxes:[
-				...this.state.boxes.slice(0,this.selectedBoxIndex),
-				{
-				   ...this.state.boxes[this.selectedBoxIndex],
-				   top : Math.abs(this.getMousePosition(ev).y - this.state.mouseFirstCapture.y),
-                   left : Math.abs(this.getMousePosition(ev).x - this.state.mouseFirstCapture.x),
-				},
-				...this.state.boxes.slice(this.selectedBoxIndex+1)
-			]})
+			
 
 		}
 	};
 	isValidStyle = c => {
 		if ( 
-			Number.isNaN(parseFloat(c.diffY)) ||
-			Math.abs(c.diffY)<10 ||
-			Math.abs(c.diffX)<10  
+			Number.isNaN(parseFloat(c.height)) ||
+			Math.abs(c.height)<10 ||
+			Math.abs(c.width)<10  
 		) return ({});
 
 		return {
@@ -408,8 +400,8 @@ class Container extends React.Component {
 			visible:c.visible,
 			top: c.top ? Math.abs(c.top) + 'px' : '0px',
 			left: c.left ? Math.abs(c.left) + 'px' : '0px',
-			height: !Number.isNaN(parseFloat(c.diffY)) ? Math.abs(c.diffY) + 'px' : '0px',
-			width: !Number.isNaN(parseFloat(c.diffX)) ? Math.abs(c.diffX) + 'px' : '0px'
+			height: !Number.isNaN(parseFloat(c.height)) ? Math.abs(c.height) + 'px' : '0px',
+			width: !Number.isNaN(parseFloat(c.width)) ? Math.abs(c.width) + 'px' : '0px'
 		};
 	};
 	showMenuItems=()=>{
@@ -494,8 +486,8 @@ class Container extends React.Component {
 				...data,
 				top:  parseInt((data.top)/ss)*ss,
 				left: parseInt((data.left)/ss)*ss,
-				diffX:parseInt((data.diffX)/ss)*ss,
-				diffY:parseInt((data.diffY)/ss)*ss,
+				width:parseInt((data.width)/ss)*ss,
+				height:parseInt((data.height)/ss)*ss,
 			})
 		}
 		return data;
@@ -517,37 +509,9 @@ class Container extends React.Component {
 				onWheel={this.onScrollMainContainer}
 				className={`MAIN_CONTAINER`}>
 
-				{this.state.boxes.map((b, bi) => (
-					<Cropper
-						key={bi}
-						zindex={bi}
-						onRefChild={(ref,ai)=>{ 
-						 this.croppers[ai]=ref
-						}}
-						data={this.snapGridify({ ...b })}
-						ref={r=>this.croppers[bi]=r}
-						isDragging={this.selectedBoxIndex === bi && this.isDraggingOld}
-						isCropping={this.selectedBoxIndex === bi && this.isCroppingOld}
-						isSelected={this.selectedBoxIndex === bi}
-						
-						onMouseUp={(ev) => {
-							this.isDraggingOld = false;
-							this.isCroppingOld = false;
-							this.sideCropping = '';
-							this.setState({ mouseFirstCapture: { x: 0, y: 0, h: 0, w: 0 } });
-						}}
-						onCroping={(ev, side) => {
-							this.isCroppingOld = true;
-							this.sideCropping = side;
-							this.selectedBoxIndex = bi;
-						}}
-						onSelectBox={() => {
-							this.selectedBoxIndex = bi;
-							this.isDraggingOld = true;
-						}}
-					/>
-				))}
-				{this.isDraggingNew && !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && <Cropper data={this.snapGridify({ ...this.state.defaultStyle })} />}
+				{this.state.boxes}
+
+				{this.isDraggingNew && !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && <Cropper key={-2} data={this.snapGridify({ ...this.state.defaultStyle })} />}
 				{this.debugMode &&
 					(() => {
 						console.clear();
@@ -573,13 +537,13 @@ class Container extends React.Component {
 		if(index===-1){
 			return;
 		}
-		this.croppers[this.selectedBoxIndex].addChild(
+		getStore(this.selectedBoxIndex).addChild(
 			t,
-			Object.keys(this.croppers).length+1,
+			Object.keys(getStore()).length+1,
 			(r)=>{
 				this.selectedBoxIndex=r;
 			},
-			(ref,lastIndex)=>this.croppers[lastIndex]=ref
+			(ref,lastIndex)=>setStore(lastIndex,ref)
 			)
 		
 	}
@@ -639,4 +603,6 @@ class Container extends React.Component {
 		);
 	}
 }
+
+
 export default Container;
