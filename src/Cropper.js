@@ -3,20 +3,19 @@ import style from './CropperStyle'
 import T from './T'
 import {getStore,setStore} from './Repository'
 import './App.css';
+import Redux from './Redux'
+import { changeConfirmLocale } from 'antd/lib/modal/locale';
 
 class App extends React.Component {
 	constructor(props) {
 		super(props);
-
 		
-
+		this.R=Redux;
 		this.state = {
 			data: props.data,
 			childrens: [],
-			customStyle: {},
 			isSelected:false,
 			isDragging:false,
-			_customeStringStyle: '',
 		};
 	}
 	componentWillReceiveProps(nxp){
@@ -67,6 +66,42 @@ class App extends React.Component {
 
 	addChild = (t, lastIndex, updateSelectedBoxIndex, setRef) => {
 
+		this.setState({
+			childrens: [...this.state.childrens,
+
+			<T
+				key={lastIndex}
+				t={t}
+				autoIncreament={lastIndex}
+				onMouseDown={ev => {
+					ev.stopPropagation();
+					this.R.selectedBoxIndex=lastIndex
+					getStore(lastIndex).setSelected(true)
+					this.R.isDraggingOld = true;
+				}}
+				ref={r => setStore(lastIndex,r)}
+				zindex={lastIndex}
+				onRefChild={(ref,ai)=>setStore(ai,ref)}
+
+				isDragging={this.R.selectedBoxIndex === lastIndex && this.R.isDraggingOld}
+				isCropping={this.R.selectedBoxIndex === lastIndex && this.R.isCroppingOld}
+				isSelected={this.R.selectedBoxIndex === lastIndex}
+				
+				onMouseUp={(ev) => {
+					ev.stopPropagation();
+					this.R.isDraggingOld = false;
+					this.R.isCroppingOld = false;
+					this.R.sideCropping = '';
+				}}
+				onCroping={(ev, side) => {
+					ev.stopPropagation();
+					this.R.isCroppingOld = true;
+					this.R.sideCropping = side;
+					this.R.selectedBoxIndex = lastIndex;
+				}}
+			/>
+			]
+		})
 
 
 		
@@ -91,7 +126,8 @@ class App extends React.Component {
 	}
 
 	render() {
-		const { customStyle } = this.state;
+
+
 		return (
 			<div
 				onMouseDown={() => this.props.onSelectBox()}
@@ -104,7 +140,6 @@ class App extends React.Component {
 					cursor: (this.state.isDragging ? 'grabbing' : 'grab'),
 					zIndex: (this.state.isSelected ? 10000 : this.props.zindex),
 					...{ ...this.adaptor(this.state.data) },
-					...{ ...customStyle }
 				}}
 			>
 				<p>{`Reactivator_${this.props.zindex} w:${this.state.data.width} h:${this.state.data.height} t:${this.state.data.top} l:${this.state.data.left}`}</p>

@@ -1,43 +1,68 @@
 import React from 'react'
 import style from './CropperStyle'
+import Redux from './Redux'
+import {getStore,setStore} from './Repository'
 
-const defaultStyle={
-    top:'0px',
-    left:'0px',
-    width:'50px',
-    height:'50px',
-    backgroundColor:'orange',
+const getRandomRGB=()=>{
+    const rgb=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
+    return `#${rgb[~~(Math.random()*16)]}${rgb[~~(Math.random()*16)]}${rgb[~~(Math.random()*16)]}`
 }
 
+const defaultStyle={
+    top:0,
+    left:0,
+    width:50,
+    height:50,
+}
 
 export default class T extends React.Component {
 
     constructor(prop){
         super(prop);
-        this.state={
-            data:defaultStyle,
-            childrens:[],
-        }
-    }
+        this.R=Redux;
 
-    componentWillReceiveProps(nxp){
-        this.setState({data:nxp.data})
+        this.state={
+            data:{...prop.t.data,backgroundColor:getRandomRGB()},
+            childrens: [],
+			isSelected:false,
+			isDragging:false,
+        }
     }
 
     addChild = (t, lastIndex, updateSelectedBoxIndex, setRef) => {
 
 		this.setState({
 			childrens: [...this.state.childrens,
-
 			<T
-				key={lastIndex}
-				t={t}
-				autoIncreament={lastIndex}
-				onMouseDown={ev => {
-					ev.stopPropagation();
-					updateSelectedBoxIndex(lastIndex)
-				}}
-				ref={r => setRef(r, lastIndex)}
+                key={lastIndex}
+                t={t}
+                autoIncreament={lastIndex}
+                onMouseDown={ev => {
+                    ev.stopPropagation();
+                    this.R.selectedBoxIndex=lastIndex
+                    getStore(lastIndex).setSelected(true)
+                    this.R.isDraggingOld = true;
+                }}
+                ref={r => setStore(lastIndex,r)}
+                zindex={lastIndex}
+                onRefChild={(ref,ai)=>setStore(ai,ref)}
+
+                isDragging={this.R.selectedBoxIndex === lastIndex && this.R.isDraggingOld}
+                isCropping={this.R.selectedBoxIndex === lastIndex && this.R.isCroppingOld}
+                isSelected={this.R.selectedBoxIndex === lastIndex}
+                
+                onMouseUp={(ev) => {
+                    ev.stopPropagation();
+                    this.R.isDraggingOld = false;
+                    this.R.isCroppingOld = false;
+                    this.R.sideCropping = '';
+                }}
+                onCroping={(ev, side) => {
+                    ev.stopPropagation();
+                    this.R.isCroppingOld = true;
+                    this.R.sideCropping = side;
+                    this.R.selectedBoxIndex = lastIndex;
+                }}
 			/>
 
 
@@ -46,25 +71,53 @@ export default class T extends React.Component {
 
 	}
 
-    setStyle=(data)=>{
-        
-        this.setState({
-            data:{
-                ...defaultStyle,
-                ...this.state.data,
-                ...data
-            }
-        })
+    componentWillReceiveProps(nxp){
+		this.setState({data:{...this.state.data,...nxp.t.data}})
+	}
+	getStyles = () => {
+		return this.state.data
+    }
+    setStyles = (data) => {
+		this.setState({ data:{...this.state.data,...data} })
+	}
+	setSelected=(toggle=undefined)=>{
+		if(!toggle){
+			this.setState({
+				isDragging:false,
+				isSelected:false,
+			})
+			return;
+		}
+		
+		this.setState({
+			isDragging:true,
+			isSelected:true
+		})
+    }
 
-    }
-    getStyles=()=>{
-        return this.state.data
-    }
-    getRandomRGB=()=>{
-        const rgb=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
-        return `#${rgb[~~Math.random()*16]}${rgb[~~Math.random()*16]}${rgb[~~Math.random()*16]}`
-    }
+    adaptor = (c = {}) => {
 
+		if (Number.isNaN(parseFloat(c.height)) ||
+			Math.abs(c.height) < 10 ||
+			Math.abs(c.width) < 10
+		)
+			return ({});
+
+		return {
+			...c,
+			name: c.name,
+			lock: c.lock,
+			visible: c.visible,
+			top: c.top ? Math.abs(c.top) + 'px' : '0px',
+			left: c.left ? Math.abs(c.left) + 'px' : '0px',
+			height: !Number.isNaN(parseFloat(c.height)) ? Math.abs(c.height) + 'px' : '0px',
+			width: !Number.isNaN(parseFloat(c.width)) ? Math.abs(c.width) + 'px' : '0px'
+		};
+	};
+
+
+    
+    
     renderHandles() {
 		const { isCropping, onCroping } = this.props
 		return (
@@ -86,30 +139,30 @@ export default class T extends React.Component {
 
     render() {
      
+        console.log(this.state.data)
+
         return ( 
             <React.Fragment>
                 {    
                     React.createElement(this.props.t.type,{
-                    style:{
-                        ...defaultStyle,
-                        border: '1px dashed black',
-                        backgroundColor: this.getRandomRGB(),
-                        position: 'absolute',
-                        cursor: (this.props.isDragging ? 'grabbing' : 'grab'),
-                        zIndex: (this.props.isSelected ? 10000 : this.props.zindex),
-                        ...this.state.data,
-                    },
-                    onMouseDown:this.props.onMouseDown,
-
-                    onMouseUp:this.props.onMouseUp,
-                    className:`CROPPER ${this.props.isSelected ? 'border' : ''} `
-
-                    },
-                    
-                    )
+                        style:{
+                            ...defaultStyle,
+                            border: '1px dashed black',
+                            position: 'absolute',
+                            cursor: (this.state.isDragging ? 'grabbing' : 'grab'),
+                            zIndex: (this.state.isSelected ? 10000 : this.props.zindex),
+                            ...{...this.adaptor(this.state.data)},
+                        },
+                        onMouseDown:this.props.onMouseDown,
+                        onMouseUp:this.props.onMouseUp,
+                        className:`CROPPER ${this.state.isSelected ? 'border' : ''} `
+                    },[
+                        
+                        ...this.state.childrens,
+                       this.state.isSelected ? this.renderHandles() : null
+                    ])
                 }
-                {this.state.childrens}
-                {this.props.isSelected ? this.renderHandles() : null}
+                
             </React.Fragment>
             );
 

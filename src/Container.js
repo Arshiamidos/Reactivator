@@ -4,9 +4,9 @@ import './App.css';
 import _ from 'lodash';
 import RowLayerItem from './RowLayerItem'
 import StyleEditor from './StyleEditor'
-import {connect} from 'react-redux'
-import {setSelected,toggleDraggingNew,toggleCroppingOld,toggleDraggingOld} from './redux/actions/canvas'
 import {getStore,setStore} from './Repository'
+import Redux from './Redux';
+import T from './T';
 
 
 class Container extends React.Component {
@@ -16,11 +16,7 @@ class Container extends React.Component {
 		super(props);
 
 		this.debugMode = false;
-		this.sideCropping = '';
-		this.isDraggingOld = false;
-		this.isDraggingNew = false;
-		this.isCroppingOld = false;
-		this.selectedBoxIndex = -1;
+		this.R= Redux
 
 		this.state = {
 			toggleLayerLine:true,
@@ -90,6 +86,7 @@ class Container extends React.Component {
 		if(index===-1) return this.getStyles();//main container
 		else {
 
+			
 			if(getStore(index)) {
 
 				return getStore(index).getStyles()
@@ -134,10 +131,10 @@ class Container extends React.Component {
 			ev.preventDefault();
 			return;
 		}
-		if(this.selectedBoxIndex>=0){
-			getStore(this.selectedBoxIndex).setSelected(false)
+		if(this.R.selectedBoxIndex>=0){
+			getStore(this.R.selectedBoxIndex).setSelected(false)
 		}
-		this.selectedBoxIndex = -1;
+		this.R.selectedBoxIndex = -1;
 		this.isDraggingNew = true;
 		this.setState({defaultStyle:{
 			...this.state.defaultStyle,
@@ -204,8 +201,8 @@ class Container extends React.Component {
 	};
 	onMouseMove = (ev) => {
 		if (ev.buttons === 1) {
-			if (this.isDraggingOld && !this.isCroppingOld) this.onMouseMoveOldBox(ev, this.selectedBoxIndex);
-			if (this.isCroppingOld) this.onCroppingOld(ev, this.selectedBoxIndex, this.sideCropping);
+			if (this.R.isDraggingOld && !this.R.isCroppingOld) this.onMouseMoveOldBox(ev, this.R.selectedBoxIndex);
+			if (this.R.isCroppingOld) this.onCroppingOld(ev, this.R.selectedBoxIndex, this.R.sideCropping);
 			if (this.isDraggingNew) this.onCreating(ev);
 		}
 	};
@@ -221,32 +218,32 @@ class Container extends React.Component {
 			this.setState({
 				boxes: [ ...this.state.boxes,
 					<Cropper
-					key={bi}
-					zindex={bi}
-					onRefChild={(ref,ai)=>setStore(ai,ref)}
-					data={this.snapGridify({ ...this.state.defaultStyle })}
-					ref={r=>setStore(bi,r)}
-					isDragging={this.selectedBoxIndex === bi && this.isDraggingOld}
-					isCropping={this.selectedBoxIndex === bi && this.isCroppingOld}
-					isSelected={this.selectedBoxIndex === bi}
-					
-					onMouseUp={(ev) => {
-						this.isDraggingOld = false;
-						this.isCroppingOld = false;
-						this.sideCropping = '';
-						this.setState({ mouseFirstCapture: { x: 0, y: 0, h: 0, w: 0 } });
-					}}
-					onCroping={(ev, side) => {
-						this.isCroppingOld = true;
-						this.sideCropping = side;
-						this.selectedBoxIndex = bi;
-					}}
-					onSelectBox={() => {
-						this.selectedBoxIndex = bi;
-						getStore(bi).setSelected(true)
-						this.isDraggingOld = true;
-					}}
-				/>
+						key={bi}
+						zindex={bi}
+						onRefChild={(ref,ai)=>setStore(ai,ref)}
+						data={this.snapGridify({ ...this.state.defaultStyle })}
+						ref={r=>setStore(bi,r)}
+						isDragging={this.R.selectedBoxIndex === bi && this.R.isDraggingOld}
+						isCropping={this.R.selectedBoxIndex === bi && this.R.isCroppingOld}
+						isSelected={this.R.selectedBoxIndex === bi}
+						
+						onMouseUp={(ev) => {
+							this.R.isDraggingOld = false;
+							this.R.isCroppingOld = false;
+							this.R.sideCropping = '';
+							this.setState({ mouseFirstCapture: { x: 0, y: 0, h: 0, w: 0 } });
+						}}
+						onCroping={(ev, side) => {
+							this.R.isCroppingOld = true;
+							this.R.sideCropping = side;
+							this.R.selectedBoxIndex = bi;
+						}}
+						onSelectBox={() => {
+							this.R.selectedBoxIndex = bi;
+							getStore(bi).setSelected(true)
+							this.R.isDraggingOld = true;
+						}}
+					/>
 				
 				],
 				
@@ -268,7 +265,7 @@ class Container extends React.Component {
 	};
 	onCroppingOld = (ev, boxIndex, side) => {
 
-		if (this.selectedBoxIndex === boxIndex) {
+		if (this.R.selectedBoxIndex === boxIndex) {
 			
 			
 			const height = 
@@ -363,7 +360,7 @@ class Container extends React.Component {
 	};
 	onMouseMoveOldBox = (ev, bi) => {
 		
-		if ( this.selectedBoxIndex === bi ) {
+		if ( this.R.selectedBoxIndex === bi ) {
 			
 			if (this.state.mouseFirstCapture.x === 0) {
 				this.setState({
@@ -413,17 +410,17 @@ class Container extends React.Component {
 						type="button"
 						value="remove selected"
 						onClick={() => {
-							if(this.selectedBoxIndex===-1){
+							if(this.R.selectedBoxIndex===-1){
 								return;
 							}
 							this.setState({
 								boxes:[
-									...this.state.boxes.slice(0,this.selectedBoxIndex),
-									...this.state.boxes.slice(this.selectedBoxIndex+1)
+									...this.state.boxes.slice(0,this.R.selectedBoxIndex),
+									...this.state.boxes.slice(this.R.selectedBoxIndex+1)
 								]},
 								()=>{
 
-									this.selectedBoxIndex=-1
+									this.R.selectedBoxIndex=-1
 								})
 
 						}}
@@ -497,7 +494,7 @@ class Container extends React.Component {
 
 		return(
 			<div
-				ref={(ref) => (this.container = ref)}
+				ref={ref => this.container = ref}
 				style={{ 
 					
 					...{...(this.state.toggleSnapGrid?{
@@ -511,7 +508,14 @@ class Container extends React.Component {
 
 				{this.state.boxes}
 
-				{this.isDraggingNew && !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && <Cropper key={-2} data={this.snapGridify({ ...this.state.defaultStyle })} />}
+				{
+					this.isDraggingNew && 
+					!_.isEmpty(this.isValidStyle(this.state.defaultStyle)) &&
+					<T t={{type:"div",data:this.snapGridify({ ...this.state.defaultStyle })}} />
+				}
+				
+				{/* <Cropper key={-2} data={this.snapGridify({ ...this.state.defaultStyle })} /> */}
+
 				{this.debugMode &&
 					(() => {
 						console.clear();
@@ -527,7 +531,7 @@ class Container extends React.Component {
 					this.state.boxes.map(
 						(b,bi)=><RowLayerItem 
 							data={b}
-							isSelected={this.selectedBoxIndex===bi}
+							isSelected={this.R.selectedBoxIndex===bi}
 						/>)
 				}
 			</div>
@@ -537,11 +541,11 @@ class Container extends React.Component {
 		if(index===-1){
 			return;
 		}
-		getStore(this.selectedBoxIndex).addChild(
+		getStore(this.R.selectedBoxIndex).addChild(
 			t,
 			Object.keys(getStore()).length+1,
 			(r)=>{
-				this.selectedBoxIndex=r;
+				this.R.selectedBoxIndex=r;
 			},
 			(ref,lastIndex)=>setStore(lastIndex,ref)
 			)
@@ -587,13 +591,14 @@ class Container extends React.Component {
 					
 				</div>
 
+
 				{
 					this.state.toggleStyleEditor && 
 					<StyleEditor 
-						selectedIndex={this.selectedBoxIndex}
-						onDragTemplate={(t)=>{this.addChild(t,this.selectedBoxIndex) }}
-						data={this.getCurrentRefrenceStyle(this.selectedBoxIndex)} 
-						onConfirm={ newStyle =>{this.setCurrentRefrenceStyle(this.selectedBoxIndex,newStyle)}}
+						selectedIndex={this.R.selectedBoxIndex}
+						onDragTemplate={(t)=>{this.addChild(t,this.R.selectedBoxIndex) }}
+						data={this.getCurrentRefrenceStyle(this.R.selectedBoxIndex)} 
+						onConfirm={ newStyle =>{this.setCurrentRefrenceStyle(this.R.selectedBoxIndex,newStyle)}}
 						/>
 				}
 				
