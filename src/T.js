@@ -25,7 +25,8 @@ export default class T extends React.Component {
             data:{...prop.t.data,backgroundColor:getRandomRGB()},
             childrens: [],
 			isSelected:false,
-			isDragging:false,
+            isDragging:false,
+            isCropping:false,
         }
     }
 
@@ -52,11 +53,7 @@ export default class T extends React.Component {
                 ref={r => setStore(lastIndex,r)}
                 zindex={lastIndex}
                 onRefChild={(ref,ai)=>setStore(ai,ref)}
-
-                isDragging={this.R.selectedBoxIndex === lastIndex && this.R.isDraggingOld}
-                isCropping={this.R.selectedBoxIndex === lastIndex && this.R.isCroppingOld}
-                isSelected={this.R.selectedBoxIndex === lastIndex}
-                
+               
                 onMouseUp={(ev) => {
                     ev.stopPropagation();
                     this.R.isDraggingOld = false;
@@ -73,7 +70,7 @@ export default class T extends React.Component {
                     this.R.sideCropping = side;
                     this.R.selectedBoxIndex = lastIndex;
                     this.props.resetMouseFirstCapture()
-                    
+
                     this.props.startPropagtion()
                 }}
                         
@@ -86,13 +83,15 @@ export default class T extends React.Component {
 	}
 
     componentWillReceiveProps(nxp){
+        
 		this.setState({data:{...this.state.data,...nxp.t.data}})
 	}
 	getStyles = () => {
 		return this.state.data
     }
     setStyles = (data) => {
-		this.setState({ data:{...this.state.data,...data} })
+        this.setState({ data:{...this.state.data,...data} })
+        
 	}
 	setSelected=(toggle=undefined)=>{
 		if(!toggle){
@@ -106,6 +105,32 @@ export default class T extends React.Component {
 		this.setState({
 			isDragging:true,
 			isSelected:true
+		})
+    }
+
+    toggleDragging=(toggle=undefined)=>{
+		if(!toggle){
+			this.setState({
+				isDragging:false,
+			})
+			return;
+		}
+		
+		this.setState({
+			isDragging:true,
+		})
+    }
+
+    toggleCropping=(toggle=undefined)=>{
+		if(!toggle){
+			this.setState({
+				isCropping:false,
+			})
+			return;
+		}
+		
+		this.setState({
+			isCropping:true,
 		})
     }
 
@@ -133,13 +158,14 @@ export default class T extends React.Component {
     
     
     renderHandles() {
-		const { isCropping, onCroping } = this.props
+        const { onCroping } = this.props
+        const { isCropping } = this.state
 		return (
 			<div>
-				<div data-dir='ss' style={{ ...style.RegionLineS, cursor: isCropping ? 's-resize' : 'row-resize' }} onMouseDown={(ev) => onCroping(ev, 'ss')} />
-				<div data-dir='ww' style={{ ...style.RegionLineW, cursor: isCropping ? 'w-resize' : 'col-resize' }} onMouseDown={(ev) => onCroping(ev, 'ww')} />
-				<div data-dir='ee' style={{ ...style.RegionLineE, cursor: isCropping ? 'e-resize' : 'col-resize' }} onMouseDown={(ev) => onCroping(ev, 'ee')} />
-				<div data-dir='nn' style={{ ...style.RegionLineN, cursor: isCropping ? 'n-resize' : 'row-resize' }} onMouseDown={(ev) => onCroping(ev, 'nn')} />
+				<div data-dir='ss' style={{ ...style.RegionLineS,    cursor: isCropping ? 's-resize' : 'row-resize' }} onMouseDown={(ev) => onCroping(ev, 'ss')} />
+				<div data-dir='ww' style={{ ...style.RegionLineW,    cursor: isCropping ? 'w-resize' : 'col-resize' }} onMouseDown={(ev) => onCroping(ev, 'ww')} />
+				<div data-dir='ee' style={{ ...style.RegionLineE,    cursor: isCropping ? 'e-resize' : 'col-resize' }} onMouseDown={(ev) => onCroping(ev, 'ee')} />
+				<div data-dir='nn' style={{ ...style.RegionLineN,    cursor: isCropping ? 'n-resize' : 'row-resize' }} onMouseDown={(ev) => onCroping(ev, 'nn')} />
 
 				<div data-dir='se' style={{ ...style.RegionHandleSE, cursor: isCropping ? 'crosshair' : 'se-resize' }} onMouseDown={(ev) => onCroping(ev, 'se')} />
 				<div data-dir='sw' style={{ ...style.RegionHandleSW, cursor: isCropping ? 'crosshair' : 'sw-resize' }} onMouseDown={(ev) => onCroping(ev, 'sw')} />
