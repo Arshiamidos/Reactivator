@@ -43,10 +43,12 @@ export default class T extends React.Component {
                     this.R.selectedBoxIndex=lastIndex
                     getStore(lastIndex).setSelected(true)
                     this.R.isDraggingOld = true;
+                    this.props.resetMouseFirstCapture()
                     this.props.startPropagtion()
                     
                 }}
                 startPropagtion={this.props.startPropagtion}
+                resetMouseFirstCapture={this.props.resetMouseFirstCapture}
                 ref={r => setStore(lastIndex,r)}
                 zindex={lastIndex}
                 onRefChild={(ref,ai)=>setStore(ai,ref)}
@@ -60,13 +62,18 @@ export default class T extends React.Component {
                     this.R.isDraggingOld = false;
                     this.R.isCroppingOld = false;
                     this.R.sideCropping = '';
+                    this.props.resetMouseFirstCapture()
+
                     this.props.startPropagtion()
                 }}
                 onCroping={(ev, side) => {
                     ev.stopPropagation();
+					this.R.isDraggingOld = false;
                     this.R.isCroppingOld = true;
                     this.R.sideCropping = side;
                     this.R.selectedBoxIndex = lastIndex;
+                    this.props.resetMouseFirstCapture()
+                    
                     this.props.startPropagtion()
                 }}
                         

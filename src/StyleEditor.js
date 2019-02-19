@@ -12,7 +12,6 @@ class App extends Component {
   }
 
   componentWillReceiveProps=(nxp)=>{
-      console.log('update data style editor')
       this.setState({_styles:nxp.data})
   }
   
