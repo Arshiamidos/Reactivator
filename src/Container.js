@@ -135,7 +135,20 @@ class Container extends React.Component {
 	
 
 	
-
+	addCustomChild=(t,index)=>{
+		if (index === -1) {
+			return;
+		}
+		getStore(this.R.selectedBoxIndex).addCustomChild(t, Object.keys(getStore()).length + 1);
+		this.setState({
+			mouseFirstCapture: {
+				x: 0,
+				y: 0,
+				w: 0,
+				h: 0
+			}
+		});
+	}
 	addChild = (t, index) => {
 		if (index === -1) {
 			return;
@@ -192,6 +205,9 @@ class Container extends React.Component {
 						selectedIndex={this.R.selectedBoxIndex}
 						onDragTemplate={(t) => {
 							this.addChild(t, this.R.selectedBoxIndex);
+						}}
+						onDrageCustom={(t)=>{
+							this.addCustomChild(t,this.R.selectedBoxIndex)
 						}}
 						data={this.getCurrentRefrenceStyle(this.R.selectedBoxIndex)}
 						onConfirm={(newStyle) => {

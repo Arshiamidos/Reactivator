@@ -64,7 +64,11 @@ class App extends Component {
             <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='li' /> 
             <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='input' /> 
             <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='p' /> 
+            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='p' /> 
 
+
+            
+            <Comp getComp={(T)=>this.props.onDrageCustom(T)} type='custome' /> 
 
 
 

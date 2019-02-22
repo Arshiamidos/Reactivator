@@ -16,20 +16,78 @@ const defaultStyle={
 }
 
 export default class T extends React.Component {
-
+    
     constructor(prop){
         super(prop);
         this.R=Redux;
-
+        
         this.state={
             data:{...prop.t.data,backgroundColor:getRandomRGB()},
-            childrens: [],
+            childrens: this.props.childrens || [],
 			isSelected:false,
             isDragging:false,
             isCropping:false,
         }
     }
+    
+    addCustomChild=(t,lastIndex)=>{
+        
+        const CustomChild = React.lazy(() => import("./code"));
 
+        this.setState({
+            childrens: [...this.state.childrens,
+                <T
+                    key={lastIndex}
+                    t={t}
+                    autoIncreament={lastIndex}
+                    childrens={[
+                        <React.Suspense fallback={<div>loading ...</div>}>
+                            <CustomChild/>
+                        </React.Suspense>
+                    ]}
+                    onMouseDown={ev => {
+                        ev.stopPropagation();
+                        deSelectionStore();
+                        this.R.selectedBoxIndex=lastIndex
+                        getStore(lastIndex).setSelected(true)
+                        this.R.isDraggingOld = true;
+                        this.props.resetMouseFirstCapture()
+                        this.props.startPropagtion()
+                        
+                    }}
+                    startPropagtion={this.props.startPropagtion}
+                    resetMouseFirstCapture={this.props.resetMouseFirstCapture}
+                    ref={r => setStore(lastIndex,r)}
+                    zindex={lastIndex}
+                    onRefChild={(ref,ai)=>setStore(ai,ref)}
+                
+                    onMouseUp={(ev) => {
+                        ev.stopPropagation();
+                        this.R.isDraggingOld = false;
+                        this.R.isCroppingOld = false;
+                        this.R.sideCropping = '';
+                        this.props.resetMouseFirstCapture()
+
+                        this.props.startPropagtion()
+                    }}
+                    onCroping={(ev, side) => {
+                        ev.stopPropagation();
+                        this.R.isDraggingOld = false;
+                        this.R.isCroppingOld = true;
+                        this.R.sideCropping = side;
+                        this.R.selectedBoxIndex = lastIndex;
+                        this.props.resetMouseFirstCapture()
+
+                        this.props.startPropagtion()
+                    }}
+                        
+			/>
+            ]
+        })
+
+
+
+    }
     addChild = (t, lastIndex) => {
 
 		this.setState({
