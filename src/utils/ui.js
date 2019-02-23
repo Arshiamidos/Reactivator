@@ -2,6 +2,9 @@ import React from 'react'
 import RowLayerItem from '../RowLayerItem'
 import _ from 'lodash'
 import T from '../T'
+import { getStore, setStore, deSelectionStore,resetStore } from '../Repository';
+import Redux from '../Redux';
+
 export function showMainContainer(){
     return (
         <div
@@ -47,7 +50,7 @@ export function showMainContainer(){
 export function showLayers(){
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            {this.state.boxes.map((b, bi) => <RowLayerItem data={b} isSelected={this.R.selectedBoxIndex === bi} />)}
+            {this.state.boxes.map((b, bi) => <RowLayerItem key={"ri"+bi} data={b} isSelected={this.R.selectedBoxIndex === bi} />)}
         </div>
     );
 };
@@ -125,7 +128,11 @@ export function showMenuItems(){
                     value="reset"
                     onClick={() => this.setState({ undos: [ ...this.state.boxes ], boxes: [] })}
                 />
-                <input type="button" value="hard reset" onClick={() => this.setState({ boxes: [] })} />
+                <input type="button" value="hard reset" onClick={() => {
+                    Redux.selectedBoxIndex=-1
+                    resetStore()
+                    this.setState({ boxes: [] })}
+                    } />
             </div>
         </div>
     );

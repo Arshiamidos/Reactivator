@@ -1,16 +1,18 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import './App.css';
 import _ from 'lodash';
 import RowLayerItem from './RowLayerItem';
 import StyleEditor from './StyleEditor';
-import { getStore, setStore, deSelectionStore } from './Repository';
+import { getStore, setStore, deSelectionStore,resetStore } from './Repository';
 import Redux from './Redux';
-import T from './T';
+
+
 import {
 	getMousePosition,
 	getCurrentRefrenceStyle,
 	setCurrentRefrenceStyle,
+	getCurrentRefrenceAttributes,
+	setCurrentRefrenceAttribute,
 	onScrollMainContainer,
 	getStyles,
 	onContainerMouseDown,
@@ -19,7 +21,6 @@ import {
 	onMouseMove,
 	onCroppingOld,
 	onMouseMoveOldBox,
-
 
 
 } from './utils/events'
@@ -33,6 +34,8 @@ class Container extends React.Component {
 
 		this.getMousePosition=getMousePosition.bind(this)
 		this.getCurrentRefrenceStyle=getCurrentRefrenceStyle.bind(this)
+		this.getCurrentRefrenceAttributes=getCurrentRefrenceAttributes.bind(this)
+		this.setCurrentRefrenceAttribute=setCurrentRefrenceAttribute.bind(this)
 		this.setCurrentRefrenceStyle=setCurrentRefrenceStyle.bind(this)
 		this.onScrollMainContainer=onScrollMainContainer.bind(this)
 		this.onContainerMouseDown=onContainerMouseDown.bind(this)
@@ -210,8 +213,13 @@ class Container extends React.Component {
 							this.addCustomChild(t,this.R.selectedBoxIndex)
 						}}
 						data={this.getCurrentRefrenceStyle(this.R.selectedBoxIndex)}
+						attribs={this.getCurrentRefrenceAttributes(this.R.selectedBoxIndex)}
 						onConfirm={(newStyle) => {
 							this.setCurrentRefrenceStyle(this.R.selectedBoxIndex, newStyle);
+						}}
+						onConfirmAttributes={(newAttrib)=>{
+							this.setCurrentRefrenceAttribute(this.R.selectedBoxIndex, newAttrib);
+
 						}}
 					/>
 				)}

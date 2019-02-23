@@ -2,7 +2,7 @@ import React from 'react'
 import style from './CropperStyle'
 import Redux from './Redux'
 import {getStore,setStore,deSelectionStore} from './Repository'
-
+import voidTags from './utils/voidTags.json'
 const getRandomRGB=()=>{
     const rgb=['0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F']
     return `#${rgb[~~(Math.random()*16)]}${rgb[~~(Math.random()*16)]}${rgb[~~(Math.random()*16)]}`
@@ -27,7 +27,10 @@ export default class T extends React.Component {
 			isSelected:false,
             isDragging:false,
             isCropping:false,
+            text:'sample text',
+            attributes:{},
         }
+
     }
     
     addCustomChild=(t,lastIndex)=>{
@@ -147,6 +150,12 @@ export default class T extends React.Component {
 	getStyles = () => {
 		return this.state.data
     }
+    setAttributes=(attributes)=>{
+        this.setState({attributes})
+    }
+    getAttributes=()=>{
+        return this.state.attributes
+    }
     setStyles = (data) => {
         this.setState({ data:{...this.state.data,...data} })
         
@@ -236,10 +245,32 @@ export default class T extends React.Component {
      
 
     render() {
-     
-        return ( 
+        if(voidTags.includes(this.props.t.type)){//void tags can't have children !
+            return(
             <React.Fragment>
-                {    
+                {  
+                    React.createElement(this.props.t.type,{
+                        style:{
+                            ...defaultStyle,
+                            border: '1px dashed black',
+                            position: 'absolute',
+                            cursor: (this.state.isDragging ? 'grabbing' : 'grab'),
+                            zIndex: (this.state.isSelected ? 10000 : this.props.zindex),
+                            ...{...this.adaptor(this.state.data)},
+                        },
+                        ...{...this.state.attributes},
+                        onMouseDown:this.props.onMouseDown,
+                        onMouseUp:this.props.onMouseUp,
+                        className:`CROPPER ${this.state.isSelected ? 'border' : ''} `
+                    })
+                }
+                
+            </React.Fragment>
+            )
+        }
+        else  return ( 
+            <React.Fragment>
+                {  
                     React.createElement(this.props.t.type,{
                         style:{
                             ...defaultStyle,
@@ -253,7 +284,7 @@ export default class T extends React.Component {
                         onMouseUp:this.props.onMouseUp,
                         className:`CROPPER ${this.state.isSelected ? 'border' : ''} `
                     },[
-                        
+                        !this.state.isSelected?this.state.text:<input type="text" value={this.state.text} onChange={e=>this.setState({text:e.target.value})}/>,
                         ...this.state.childrens,
                        this.state.isSelected ? this.renderHandles() : null
                     ])

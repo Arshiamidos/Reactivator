@@ -18,13 +18,31 @@ export const setCurrentRefrenceStyle = (index, newStyle) => {
         } else throw new Error('Index Not Found ');
     }
 }
-
+export const setCurrentRefrenceAttribute=(index,newAttribute)=>{
+    if (index === -1) {
+        alert('main contianer has not attrib')
+    } else {
+        if (getStore(index)) {
+            getStore(index).setAttributes(newAttribute);
+        } else throw new Error('Index Not Found ');
+    }
+}
+export const getCurrentRefrenceAttributes=(index)=>{
+    if (index === -1) return ({});
+    else {
+        //main container
+        if (getStore(index)) {
+            return getStore(index).getAttributes();
+        } else {
+            return {};
+        }
+    }
+}
 export function getCurrentRefrenceStyle(index){
     if (index === -1) return this.getStyles();
     else {
         //main container
         if (getStore(index)) {
-            JSON.stringify(getStore(index).getStyles());
             return getStore(index).getStyles();
         } else {
             return {};
@@ -122,7 +140,9 @@ export function onCreating(ev){
 };
 
 export function onMouseUp(ev){
+    
     this.R.isDraggingNew = false;
+
 
     if (!_.isEmpty(this.isValidStyle(this.state.defaultStyle))) {
         const lastIndex = this.state.boxes.length;
@@ -168,7 +188,11 @@ export function onMouseUp(ev){
                     onRefChild={(ref, ai) => setStore(ai, ref)}
 
                     onMouseUp={(ev) => {
+                        //alert('mouse up ')
                         ev.stopPropagation();
+                        if(this.R.selectedBoxIndex===-1) {
+                            return;
+                        }
                         this.R.isDraggingOld = false;
                         this.R.isCroppingOld = false;
                         this.R.sideCropping = '';
