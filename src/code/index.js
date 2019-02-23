@@ -23,10 +23,11 @@ class App extends Component {
 
   render() {
 
-
+//if u define a custom component, it will show as you mentioned for container 
+//that means if style.with:100% it will responsive with parent element , otherwise it will static format
     return (
       <p 
-      style={{backgroundColor:'red'}}
+      style={{backgroundColor:'red',width:'100%',height:'100%'}}
       onClick={()=>alert('hello alert from custome code \n it has no side effect')}>
           {this.state.message}
       </p>

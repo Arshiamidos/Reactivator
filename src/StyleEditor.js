@@ -67,8 +67,8 @@ class App extends Component {
             <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='p' /> 
 
 
-            
-            <Comp getComp={(T)=>this.props.onDrageCustom(T)} type='custome' /> 
+            cutome components:
+            <Comp getComp={(T)=>this.props.onDrageCustom(T)} type='Custome' /> 
 
 
 
