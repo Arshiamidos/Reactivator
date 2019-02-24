@@ -1,9 +1,8 @@
 import React from 'react';
 import './App.css';
 import _ from 'lodash';
-import RowLayerItem from './RowLayerItem';
 import StyleEditor from './StyleEditor';
-import { getStore, setStore, deSelectionStore,resetStore } from './Repository';
+import { getStore } from './Repository';
 import Redux from './Redux';
 
 
@@ -120,17 +119,16 @@ class Container extends React.Component {
 
 	gridify=(pixel)=>{
 		let ss = this.state.containerStyle.snapSize;
-		return  parseInt(pixel / ss) * ss;
+		return  this.state.toggleSnapGrid?(parseInt(pixel / ss) * ss):(pixel);
 	}
 	snapGridify = (data) => {
 		if (this.state.toggleSnapGrid) {
-			let ss = this.state.containerStyle.snapSize;
 			return {
 				...data,
-				top: parseInt(data.top / ss) * ss,
-				left: parseInt(data.left / ss) * ss,
-				width: parseInt(data.width / ss) * ss,
-				height: parseInt(data.height / ss) * ss
+				top: this.gridify(data.top),
+				left: this.gridify(data.left),
+				width: this.gridify(data.width),
+				height: this.gridify(data.heigh),
 			};
 		}
 		return data;
@@ -156,7 +154,7 @@ class Container extends React.Component {
 		if (index === -1) {
 			return;
 		}
-		getStore(this.R.selectedBoxIndex).addChild(t, Object.keys(getStore()).length + 1);
+		getStore(index).addChild(t, Object.keys(getStore()).length + 1);
 		this.setState({
 			mouseFirstCapture: {
 				x: 0,

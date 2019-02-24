@@ -50,7 +50,7 @@ export function getCurrentRefrenceStyle(index){
     }
 };
 
-export const onScrollMainContainer = (ev) => {
+export function onScrollMainContainer(ev){
     if (this.state.containerStyle.zoomScale >= 0.5 && this.state.containerStyle.zoomScale <= 2.0) {
         this.setState({
             containerStyle: {
@@ -196,6 +196,7 @@ export function onMouseUp(ev){
                         this.R.isDraggingOld = false;
                         this.R.isCroppingOld = false;
                         this.R.sideCropping = '';
+
                         getStore(this.R.selectedBoxIndex).toggleDragging(false)
                         getStore(this.R.selectedBoxIndex).toggleCropping(false)
                         this.setState({
@@ -246,7 +247,7 @@ export function onMouseMove(ev){
 };
 
 export function onCroppingOld(ev, boxIndex, side){
-    if (this.R.selectedBoxIndex === boxIndex) {
+    if (this.R.selectedBoxIndex === boxIndex && this.R.selectedBoxIndex!==-1) {
         
         let { x, y, w, h, t, l } = this.state.mouseFirstCapture;
         if (x + y + w + h === 0) {

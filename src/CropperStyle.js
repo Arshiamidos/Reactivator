@@ -12,6 +12,7 @@ const style = {
 		bottom: 0 ,
 		width: '100%',
 		height: 2*handleSize,
+		zIndex:10002
 	},
 	RegionLineW:{
 		position: 'absolute',
@@ -19,6 +20,8 @@ const style = {
 		top:0,
 		width: 2*handleSize,
 		height: '90%',
+		zIndex:10002
+
 	},
 	RegionLineE:{
 		position: 'absolute',
@@ -26,6 +29,8 @@ const style = {
 		top:0 ,
 		width: 2*handleSize,
 		height: '90%',
+		zIndex:10002
+
 
 	},
 	RegionLineN:{
@@ -33,6 +38,8 @@ const style = {
 		top: -2*handleSize/2 ,
 		width: '100%',
 		height: 2*handleSize,
+		zIndex:10002
+
 	},
 
 	
@@ -44,7 +51,9 @@ const style = {
 		height: 2*handleSize,
 		outline: '1px solid rgba(0,0,0,0.5)',
 		border: '1px solid rgba(255,255,255,0.5)',
-		cursor: 'se-resize'
+		cursor: 'se-resize',
+		zIndex:10002
+
 	},
 	RegionHandleSW: {
 		position: 'absolute',
@@ -54,7 +63,9 @@ const style = {
 		height: 2*handleSize,
 		outline: '1px solid rgba(0,0,0,0.5)',
 		border: '1px solid rgba(255,255,255,0.5)',
-		cursor: 'sw-resize'
+		cursor: 'sw-resize',
+		zIndex:10002
+
 	},
 	RegionHandleNW: {
 		position: 'absolute',
@@ -64,7 +75,9 @@ const style = {
 		height: 2*handleSize,
 		outline: '1px solid rgba(0,0,0,0.5)',
 		border: '1px solid rgba(255,255,255,0.5)',
-		cursor: 'nw-resize'
+		cursor: 'nw-resize',
+		zIndex:10002
+
 	},
 	RegionHandleNE: {
 		position: 'absolute',
@@ -74,7 +87,9 @@ const style = {
 		height: 2*handleSize,
 		outline: '1px solid rgba(0,0,0,0.5)',
 		border: '1px solid rgba(255,255,255,0.5)',
-		cursor: 'ne-resize'
+		cursor: 'ne-resize',
+		zIndex:10002
+
 	},
 	RegionSelect: {
 		position: 'relative',

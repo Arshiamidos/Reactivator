@@ -2,7 +2,8 @@ import React from 'react'
 import RowLayerItem from '../RowLayerItem'
 import _ from 'lodash'
 import T from '../T'
-import { getStore, setStore, deSelectionStore,resetStore } from '../Repository';
+import { resetStore } from '../Repository';
+
 import Redux from '../Redux';
 
 export function showMainContainer(){
@@ -130,7 +131,10 @@ export function showMenuItems(){
                 />
                 <input type="button" value="hard reset" onClick={() => {
                     Redux.selectedBoxIndex=-1
-                    resetStore()
+                    resetStore();
+                    setTimeout(() => {
+                        resetStore();//tricky ya?
+                    }, 10); 
                     this.setState({ boxes: [] })}
                     } />
             </div>

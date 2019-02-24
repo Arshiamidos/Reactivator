@@ -20,16 +20,23 @@ export default class T extends React.Component {
     constructor(prop){
         super(prop);
         this.R=Redux;
+        this.state=
+        prop.zindex && getStore(prop.zindex)?//if exist for destructing new parent it will borow from refs 
+        ({...getStore(prop.zindex).state,
+            isSelected:false,
+            isDragging:false,
+            isCropping:false,
         
-        this.state={
+        })// reparenting https://github.com/facebook/react/issues/3965
+        :({
             data:{...prop.t.data,backgroundColor:getRandomRGB()},
             childrens: this.props.childrens || [],
 			isSelected:false,
             isDragging:false,
             isCropping:false,
             text:'sample text',
-            attributes:{},
-        }
+            attributes:prop.attributes||{},
+        })
 
     }
     
@@ -245,54 +252,65 @@ export default class T extends React.Component {
      
 
     render() {
-        if(voidTags.includes(this.props.t.type)){//void tags can't have children !
-            return(
-            <React.Fragment>
-                {  
-                    React.createElement(this.props.t.type,{
-                        style:{
-                            ...defaultStyle,
-                            border: '1px dashed black',
-                            position: 'absolute',
-                            cursor: (this.state.isDragging ? 'grabbing' : 'grab'),
-                            zIndex: (this.state.isSelected ? 10000 : this.props.zindex),
-                            ...{...this.adaptor(this.state.data)},
-                        },
-                        ...{...this.state.attributes},
-                        onMouseDown:this.props.onMouseDown,
-                        onMouseUp:this.props.onMouseUp,
-                        className:`CROPPER ${this.state.isSelected ? 'border' : ''} `
-                    })
-                }
-                
-            </React.Fragment>
-            )
+
+
+
+         let V=React.createElement(this.props.t.type,{
+            style:{
+                ...defaultStyle,
+                border: '1px dashed black',
+                position: 'absolute',
+                cursor: (this.state.isDragging ? 'grabbing' : 'grab'),
+                zIndex: (this.state.isSelected ? 10000 : this.props.zindex),
+                opacity: (this.state.isSelected ? 0.5 : 1),
+                ...{...this.adaptor(this.state.data)},
+                ...{...this.state.isSelected?{top:'0px',left:'0px'}:{}}
+            },
+            ...{...this.state.attributes},
+            onMouseDown:this.props.onMouseDown,
+            onMouseUp:this.props.onMouseUp,
+            //className:`CROPPER ${this.state.isSelected ? 'border' : ''} `
+        },
+            !voidTags.includes(this.props.t.type)?
+            [
+                !this.state.isSelected?this.state.text:<input type="text" value={this.state.text} onChange={e=>this.setState({text:e.target.value})}/>,
+                ...this.state.childrens,
+            ]
+            :
+            null
+        ); 
+
+
+    return [
+        
+        <React.Fragment>
+        <div
+        className={`CROPPER ${this.state.isSelected ? 'border' : ''} `}
+        style={{
+            border: '1px dashed black',
+            position: 'absolute',
+            cursor: (this.state.isDragging ? 'grabbing' : 'grab'),
+            zIndex: (this.state.isSelected ? 10000 : this.props.zindex),
+            ...{...this.adaptor(this.state.data)},
+        }}
+        >
+        {  
+           V
         }
-        else  return ( 
-            <React.Fragment>
-                {  
-                    React.createElement(this.props.t.type,{
-                        style:{
-                            ...defaultStyle,
-                            border: '1px dashed black',
-                            position: 'absolute',
-                            cursor: (this.state.isDragging ? 'grabbing' : 'grab'),
-                            zIndex: (this.state.isSelected ? 10000 : this.props.zindex),
-                            ...{...this.adaptor(this.state.data)},
-                        },
-                        onMouseDown:this.props.onMouseDown,
-                        onMouseUp:this.props.onMouseUp,
-                        className:`CROPPER ${this.state.isSelected ? 'border' : ''} `
-                    },[
-                        !this.state.isSelected?this.state.text:<input type="text" value={this.state.text} onChange={e=>this.setState({text:e.target.value})}/>,
-                        ...this.state.childrens,
-                       this.state.isSelected ? this.renderHandles() : null
-                    ])
-                }
-                
-            </React.Fragment>
-            );
+        {this.state.isSelected ? this.renderHandles() : null}
+        </div>
+    </React.Fragment>
+
+        ,
+        V
+    
+    ][this.state.isSelected?0:1]
+
+
+
 
     }
 
+
 }
+
