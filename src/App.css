@@ -28,6 +28,19 @@
   padding: 4px;
   animation: border-dance 4s infinite linear;
 }
+.path{
+  stroke-dasharray: 10;
+  animation: dashify 2s infinite linear;
+}
+@keyframes dashify{
+  0% {
+    stroke-dashoffset:10 
+  }
+  100%{
+    stroke-dashoffset: 100
+  }
+
+}
 	
 @keyframes border-dance 
 {

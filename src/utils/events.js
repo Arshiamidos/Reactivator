@@ -1,7 +1,8 @@
 import React from 'react'
-import { getStore, setStore, deSelectionStore } from '../Repository';
+import { getStore } from '../Repository';
 import _ from 'lodash'
-import T from '../T'
+import TemplateFactory from '../TemplateFactory';
+import TemplateHOC from '../TemplateHOC';
 export const getMousePosition = (ev) => ({ x: ev.pageX, y: ev.pageY });
 
 export const setCurrentRefrenceStyle = (index, newStyle) => {
@@ -150,73 +151,22 @@ export function onMouseUp(ev){
         this.setState({
             boxes: [
                 ...this.state.boxes,
-                <T
-                    key={lastIndex}
-                    t={{
-                        type: 'div',
-                        data: {
-                            ...this.state.defaultStyle,
-                            width: Math.abs(this.state.defaultStyle.width),
-                            height: Math.abs(this.state.defaultStyle.height)
-                        }
-                    }}
-                    autoIncreament={lastIndex}
-                    onMouseDown={(ev) => {
-                        ev.stopPropagation();
-                        deSelectionStore();
-                        this.R.selectedBoxIndex = lastIndex;
-                        getStore(lastIndex).setSelected(true);
-                        this.R.isDraggingOld = true;
-                        //for parent to this.forceUpdate tricky because it's a refrence that don't apply on main renderer
-                        this.setState({
-                            mouseFirstCapture: {
-                                x: 0,
-                                y: 0,
-                                w: 0,
-                                h: 0
-                            }
-                        });
-                    }}
-                    startPropagtion={() => {
-                        this.setState({});
-                    }} //for child call to update main renderer
-                    resetMouseFirstCapture={() => {
-                        this.setState({ mouseFirstCapture: { x: 0, y: 0, w: 0, h: 0 } });
-                    }}
-                    ref={(r) => setStore(lastIndex, r)}
-                    zindex={lastIndex}
-                    onRefChild={(ref, ai) => setStore(ai, ref)}
-
-                    onMouseUp={(ev) => {
-                        //alert('mouse up ')
-                        ev.stopPropagation();
-                        if(this.R.selectedBoxIndex===-1) {
-                            return;
-                        }
-                        this.R.isDraggingOld = false;
-                        this.R.isCroppingOld = false;
-                        this.R.sideCropping = '';
-
-                        getStore(this.R.selectedBoxIndex).toggleDragging(false)
-                        getStore(this.R.selectedBoxIndex).toggleCropping(false)
-                        this.setState({
-                            mouseFirstCapture: {
-                                x: 0,
-                                y: 0,
-                                w: 0,
-                                h: 0
-                            }
-                        });
-                    }}
-                    onCroping={(ev, side) => {
-                        ev.stopPropagation();
-                        this.R.isDraggingOld = false;
-                        this.R.isCroppingOld = true;
-                        this.R.sideCropping = side;
-                        this.R.selectedBoxIndex = lastIndex;
-                        this.setState({});
-                    }}
-                />
+                TemplateHOC(
+                            TemplateFactory,{
+                                mainContainer:true,
+                                zindex:lastIndex,
+                                t:{
+                                    type: 'div',
+                                    data: {
+                                        ...this.state.defaultStyle,
+                                        width: Math.abs(this.state.defaultStyle.width),
+                                        height: Math.abs(this.state.defaultStyle.height)
+                                    }
+                                }
+                            },
+                            lastIndex,
+                            this
+                            )
             ],
 
             defaultStyle: {
@@ -267,7 +217,7 @@ export function onCroppingOld(ev, boxIndex, side){
             getStore(this.R.selectedBoxIndex).toggleCropping(true)
             return;
         }
-
+        
         const deltaY = this.getMousePosition(ev).y - y;
         const deltaX = this.getMousePosition(ev).x - x;
 

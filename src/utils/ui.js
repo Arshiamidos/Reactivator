@@ -1,9 +1,8 @@
 import React from 'react'
 import RowLayerItem from '../RowLayerItem'
 import _ from 'lodash'
-import T from '../T'
+import T from '../TemplateFactory'
 import { resetStore } from '../Repository';
-
 import Redux from '../Redux';
 
 export function showMainContainer(){
@@ -37,7 +36,7 @@ export function showMainContainer(){
 
             {this.R.isDraggingNew &&
             !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && (
-                <T t={{ type: 'div', data: this.snapGridify({ ...this.state.defaultStyle }) }} />
+                <T key={-2} t={{ type: 'div', data: this.snapGridify({ ...this.state.defaultStyle }) }} />
             )}
 
             {this.debugMode &&
