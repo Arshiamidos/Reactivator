@@ -7,24 +7,36 @@ export const getMousePosition = (ev) => ({ x: ev.pageX, y: ev.pageY });
 
 export const setCurrentRefrenceStyle = (index, newStyle) => {
     if (index === -1) {
-        this.setState({
-            containerStyle: {
-                ...this.state.containerStyle,
-                ...newStyle
-            }
-        });
+
+       return  Promise.resolve(1).then(()=>{
+            
+            this.setState({
+                containerStyle: {
+                    ...this.state.containerStyle,
+                    ...newStyle
+                }
+            });
+
+        })
+
     } else {
         if (getStore(index)) {
-            getStore(index).setStyles(newStyle);
+            return Promise.resolve(1).then(()=>getStore(index).setStyles(newStyle))
         } else throw new Error('Index Not Found ');
     }
 }
 export const setCurrentRefrenceAttribute=(index,newAttribute)=>{
     if (index === -1) {
-        alert('main contianer has not attrib')
+        return Promise.resolve(1).then(()=>{
+
+            alert('main contianer has not attrib')
+        })
     } else {
         if (getStore(index)) {
-            getStore(index).setAttributes(newAttribute);
+            return Promise.resolve(1).then(()=>{
+                return getStore(index).setAttributes(newAttribute);
+            })
+
         } else throw new Error('Index Not Found ');
     }
 }
@@ -42,7 +54,8 @@ export const getCurrentRefrenceAttributes=(index)=>{
 export function getCurrentRefrenceStyle(index){
     if (index === -1) return this.getStyles();
     else {
-        //main container
+        
+        
         if (getStore(index)) {
             return getStore(index).getStyles();
         } else {
@@ -68,7 +81,11 @@ export function getStyles(){
 
 
 export function onContainerMouseDown(ev){
-    if (ev.target.className.search('MAIN_CONTAINER') < 0) {
+    if(this.state.toggleSelection){
+
+
+    }
+    if (ev.target.className.search('MAIN_CONTAINER') ===-1) {
         //child selected
         ev.preventDefault();
         return;
@@ -77,7 +94,8 @@ export function onContainerMouseDown(ev){
         getStore(this.R.selectedBoxIndex).setSelected(false);
     }
     this.R.selectedBoxIndex = -1;
-    this.R.isDraggingNew = true;
+    if(!this.state.toggleSelection)
+        this.R.isDraggingNew = true;
     this.setState({
         defaultStyle: {
             ...this.state.defaultStyle,
@@ -143,7 +161,19 @@ export function onCreating(ev){
 export function onMouseUp(ev){
     
     this.R.isDraggingNew = false;
-
+    if(this.state.toggleSelection){
+        this.setState({  
+            defaultStyle: {
+            ...this.state.defaultStyle,
+            anchorX: null,
+            anchorY: null,
+            width: null,
+            height: null,
+            top: null,
+            left: null
+        }})
+        return ;
+    }
 
     if (!_.isEmpty(this.isValidStyle(this.state.defaultStyle))) {
         const lastIndex = this.state.boxes.length;
@@ -193,9 +223,12 @@ export function onMouseMove(ev){
         if (this.R.isDraggingOld && !this.R.isCroppingOld) this.onMouseMoveOldBox(ev, this.R.selectedBoxIndex);
         if (this.R.isCroppingOld) this.onCroppingOld(ev, this.R.selectedBoxIndex, this.R.sideCropping);
         if (this.R.isDraggingNew) this.onCreating(ev);
+        if (this.state.toggleSelection) this.onCreating(ev)
     }
 };
+export function onSelecting(ev){
 
+}
 export function onCroppingOld(ev, boxIndex, side){
     if (this.R.selectedBoxIndex === boxIndex && this.R.selectedBoxIndex!==-1) {
         

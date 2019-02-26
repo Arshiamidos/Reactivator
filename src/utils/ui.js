@@ -2,6 +2,7 @@ import React from 'react'
 import RowLayerItem from '../RowLayerItem'
 import _ from 'lodash'
 import T from '../TemplateFactory'
+import Selection from '../Selection'
 import { resetStore } from '../Repository';
 import Redux from '../Redux';
 
@@ -38,6 +39,14 @@ export function showMainContainer(){
             !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && (
                 <T key={-2} t={{ type: 'div', data: this.snapGridify({ ...this.state.defaultStyle }) }} />
             )}
+            {console.log('toggle selectin ',this.state.toggleSelection)}
+            {
+                this.state.toggleSelection && 
+                !_.isEmpty(this.isValidStyle(this.state.defaultStyle)) && (
+                    <Selection key={-2} t={{ type: 'div', data: this.snapGridify({ ...this.state.defaultStyle }) }} />
+                )
+
+            }
 
             {this.debugMode &&
                 (() => {
@@ -77,6 +86,14 @@ export function showMenuItems(){
                                 this.R.selectedBoxIndex = -1;
                             }
                         );
+                    }}
+                />
+                <input
+                    type="button"
+                    value={`toggle Selection ${this.state.toggleSelection?'🕹':'✴️'}`}
+                    style={{backgroundColor:'red',fontSize:'20px',}}
+                    onClick={() => {
+                        this.setState({ toggleSelection: !this.state.toggleSelection });
                     }}
                 />
                 <input

@@ -25,7 +25,7 @@
   background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
   background-size: 15px 4px, 4px 15px, 15px 4px, 4px 15px;
   background-position: left top, right top, left bottom, left top;
-  padding: 4px;
+  padding: 0px;
   animation: border-dance 4s infinite linear;
 }
 .path{

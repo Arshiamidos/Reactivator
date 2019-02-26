@@ -13,12 +13,28 @@ export function setStore(i,refr){
    return  croppers[i]=refr
 }
 
+export function selectArea(data){
+
+    deSelectionStore();
+
+    Object.keys(croppers).forEach(cropperIndex=>{
+
+        data.top<croppers[cropperIndex].getStyles().top &&
+        data.left<croppers[cropperIndex].getStyles().left &&
+        data.left+data.width>croppers[cropperIndex].getStyles().left &&
+        data.top+data.height>croppers[cropperIndex].getStyles().top &&
+        croppers[cropperIndex].setSelected(true)
+        //croppers[cropperIndex].getStyles().left
+
+    })
+}
+
 export function resetStore(){
 
    //croppers={...EMPTY}//i dont't know why :ASK
   
    croppers={}
-    console.log(croppers)
+   console.log(croppers)
 }
 export function deSelectionStore(i=undefined){
 

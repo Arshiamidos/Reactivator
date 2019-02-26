@@ -20,6 +20,7 @@ import {
 	onMouseMove,
 	onCroppingOld,
 	onMouseMoveOldBox,
+	onSelecting,
 
 
 } from './utils/events'
@@ -44,6 +45,7 @@ class Container extends React.Component {
 		this.onMouseMove=onMouseMove.bind(this)
 		this.onCroppingOld=onCroppingOld.bind(this)
 		this.onMouseMoveOldBox=onMouseMoveOldBox.bind(this)
+		this.onSelecting=onSelecting.bind(this)
 
 
 
@@ -59,6 +61,7 @@ class Container extends React.Component {
 			toggleLayerLine: true,
 			toggleStyleEditor: true,
 			toggleSnapGrid: false,
+			toggleSelection:false,
 			mainContainerFlexPercent: 70,
 			containerStyle: {
 				zoomScale: 1.0,
@@ -198,7 +201,7 @@ class Container extends React.Component {
 						>
 							{this.showLayers()}
 						</div>
-					)}
+					)}    
 				</div>
 
 				{this.state.toggleStyleEditor && (
@@ -213,10 +216,16 @@ class Container extends React.Component {
 						data={this.getCurrentRefrenceStyle(this.R.selectedBoxIndex)}
 						attribs={this.getCurrentRefrenceAttributes(this.R.selectedBoxIndex)}
 						onConfirm={(newStyle) => {
-							this.setCurrentRefrenceStyle(this.R.selectedBoxIndex, newStyle);
+							this.setCurrentRefrenceStyle(this.R.selectedBoxIndex, newStyle)
+							.then(()=>{
+								this.setState({})
+							});
 						}}
 						onConfirmAttributes={(newAttrib)=>{
-							this.setCurrentRefrenceAttribute(this.R.selectedBoxIndex, newAttrib);
+							this.setCurrentRefrenceAttribute(this.R.selectedBoxIndex, newAttrib).then(()=>{
+								this.setState({})
+							});
+
 
 						}}
 					/>

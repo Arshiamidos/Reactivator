@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Comp from './StyleEditorComp'
 import tags from './utils/tags.json'
+import { Input } from 'antd';
 class App extends Component {
   
 
@@ -11,12 +12,13 @@ class App extends Component {
         newStyleValue:'',
         newAttribKey:'',
         newAttribValue:'',
+        filterTags:''
   }
 
   componentWillReceiveProps=(nxp)=>{
       this.setState({
           _styles:nxp.data,
-        _attribs:nxp.attribs
+          _attribs:nxp.attribs
       })
   }
   
@@ -62,6 +64,7 @@ class App extends Component {
                         newStyle={[this.state.newStyleKey]:this.state.newStyleValue}
                     }
                     this.props.onConfirm({...this.state._styles,...newStyle})
+                    this.setState({})
                 
                 }}/>
 
@@ -96,6 +99,7 @@ class App extends Component {
                     newAttribs={[this.state.newAttribKey]:this.state.newAttribValue}
                 }
                 this.props.onConfirmAttributes({...this.state._attribs,...newAttribs})
+                this.setState({})
 
                 }}
             />
@@ -103,15 +107,12 @@ class App extends Component {
             <hr/>...<hr/>
 
             {
-                tags.map((i,ii)=><Comp key={"k"+ii} getComp={(T)=>this.props.onDragTemplate(T)} type={i} /> )
+               <Input size="small" placeholder="filter tags.." onChange={e=>this.setState({filterTags:e.target.value})}/>
             }
-          {/*   
-            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='p' /> 
-            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='ul' /> 
-            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='li' /> 
-            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='img' /> 
-            <Comp getComp={(T)=>this.props.onDragTemplate(T)} type='input' /> 
- */}
+            {
+                tags.filter(i=>i.search(this.state.filterTags)>-1).map((i,ii)=><Comp key={"k"+ii} getComp={(T)=>this.props.onDragTemplate(T)} type={i} /> )
+            }
+     
 
             cutome components:
             <Comp getComp={(T)=>this.props.onDrageCustom(T)} type='Custome' /> 
